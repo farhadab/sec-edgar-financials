@@ -355,15 +355,22 @@ def get_financial_data(financial_html_text):
 
 				if 'tl' in class_list:
 					# first th with tl class has title and unit specification
-					# e.g. $ in Millions
-					unit_text = info.find('br').get_text().strip()
-					# e.g. CONSOLIDATED STATEMENTS OF INCOME - USD
+					info_list = info.find('div').get_text('|', strip=True).split('|')
+					# e.g. shares in Thousands, $ in Millions
+					unit_text = info_list[1]
+					# e.g. CONSOLIDATED STATEMENTS OF INCOME - USD ($)
 					title = info_text.replace(unit_text, '').strip()
 
 				elif 'th' in class_list:
 					# Period unit of measurement (e.g. 12 Months Ended)
-					for col in range(int(info.attrs['colspan'])):
-						period_units = period_units + [info_text] # usually months; use regex for #?
+					# Balance sheets are a snapshot, so no period
+					try:
+						for col in range(int(info.attrs['colspan'])):
+							period_units = period_units + [info_text] # usually months; use regex for #?
+					except KeyError:
+						period_units = period_units + ['None']
+						dates = dates + [info_text]
+						get_data = False
 
 				get_data = False
 
@@ -493,6 +500,7 @@ def get_html_file_name(filing_summary_xml, report_short_name):
 		if short_name == report_short_name:
 			filename = report.find('htmlfilename').get_text()
 			return filename
+	print('could not find anything for ShortName '+report_short_name)
 	return None
 
 
@@ -517,7 +525,7 @@ def process_financial_data(sgml_text):
 	sec_document = process_document(sgml_text)
 	filing_summary_xml = get_filing_summary_xml(sec_document)
 	# will change to use for loop on STATEMENT_SHORT_NAMES
-	report_short_name = 'consolidated statements of income'
+	report_short_name = 'consolidated statements of operations'
 	filename = get_html_file_name(filing_summary_xml, report_short_name)
 	financial_html_text = get_document_text(sec_document, filename)
 	get_financial_data(financial_html_text)

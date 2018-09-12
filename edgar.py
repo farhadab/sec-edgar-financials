@@ -38,9 +38,11 @@ def parse_filing_to_json(url):
 # filings_10_k = filing.get_all_forms(filings, '10-K')
 # print(filings_10_k)
 
-url = 'https://www.sec.gov/Archives/edgar/data/1750/0001047469-18-004978.txt'#filings_10_k[0].url
+url = 'https://www.sec.gov/Archives/edgar/data/320193/000032019317000070/0000320193-17-000070.txt'#filings_10_k[0].url
 sgml_text = requests.get(url).text
 sgml.process_financial_data(sgml_text)
+# next we have to store the processed data
+# https://pypi.org/project/mysqlclient/
 
 # for filing in filings[:100]:
 # 	if filing.form in ['4', '10-K']:
