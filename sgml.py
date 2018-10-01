@@ -269,22 +269,6 @@ def get_all_children(root):
 	return children
 
 
-def test_process_document():
-	'''
-	Helps test result of process_document
-	'''
-	import json
-	text = '<SEC-DOCUMENT>0001104659-18-050552.txt : 20180808\n<SEC-HEADER>0001104659-18-050552.hdr.sgml : 20180808\n<ACCEPTANCE-DATETIME>20180808170227\n</SEC-HEADER>\n<DOCUMENT>\n<TYPE>4\n<SEQUENCE>1\n<FILENAME>a4.xml\n<DESCRIPTION>4\n<TEXT>\n<XML>\nxml test\n</XML>\n</TEXT>\n</DOCUMENT>\n<DOCUMENT>\n<TYPE>EX-24\n<SEQUENCE>2\n<FILENAME>ex-24.htm\n<DESCRIPTION>EX-24\n<TEXT>\nhtml test\n</TEXT>\n</DOCUMENT>\n</SEC-DOCUMENT>'
-	#print(text)
-
-	# convert dict result to json
-	processed_document = process_document(text)
-	json_document = json.dumps(processed_document)
-	#print(json_document)
-	print(json_document)
-
-#test_process_document()
-
 # https://pypi.org/project/python-xbrl/
 
 '''
@@ -323,6 +307,9 @@ The next part differs based on 10-K and 10-Q
 '''
 
 def get_financial_data(financial_html_text):
+	'''
+	Return [...] from the html text containing the financial data
+	'''
 	source_soup = BeautifulSoup(financial_html_text, 'html.parser')
 	report = source_soup.find('table', {'class':'report'})
 	rows = report.find_all('tr')
@@ -504,17 +491,19 @@ def get_html_file_name(filing_summary_xml, report_short_name):
 	return None
 
 
-def get_statement_file_names(filing_summary_xml):
+def get_statement_names(filing_summary_xml):
 	'''
-	Return a list of filenames for STATEMENT_SHORT_NAMES in filing_summary_xml:
+	Return a list of tuples of (short_names, filenames) for
+	STATEMENT_SHORT_NAMES in filing_summary_xml
 	'''
-	statement_filenames = []
+	statement_names = []
 	for short_name in STATEMENT_SHORT_NAMES:
 		filename = get_html_file_name(filing_summary_xml, short_name)
 		if filename is not None:
-			statement_filenames += [filename]
+			statement_names += [(short_name, filename)]
 
-	return statement_filenames
+	print(statement_names)
+	return statement_names
 
 
 def process_financial_data(sgml_text):
@@ -524,10 +513,17 @@ def process_financial_data(sgml_text):
 	'''
 	sec_document = process_document(sgml_text)
 	filing_summary_xml = get_filing_summary_xml(sec_document)
-	# will change to use for loop on STATEMENT_SHORT_NAMES
-	report_short_name = 'consolidated statements of operations'
-	filename = get_html_file_name(filing_summary_xml, report_short_name)
-	financial_html_text = get_document_text(sec_document, filename)
-	get_financial_data(financial_html_text)
+	
+	# statement_names returns a tuple of report short names and the
+	# corresponding filename within the filing_summary_xml
+	statement_names = get_statement_names(filing_summary_xml)
+	# loop through and get the financial data
+	for names in statement_names:
+		short_name = names[0]
+		filename = names[1]
+		print('Getting financial data for {0} (filename: {1})'
+			.format(short_name, filename))
+		financial_html_text = get_document_text(sec_document, filename)
+		get_financial_data(financial_html_text)
 
 
