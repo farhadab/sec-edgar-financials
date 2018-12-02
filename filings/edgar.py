@@ -1,10 +1,6 @@
-import requests
-import json
-import re
-
-
 '''
-This file will be used to gather EDGAR filing data
+This file will be used to traverse the EDGAR filing system and determine
+the location of filings
 
 https://www.sec.gov/edgar/searchedgar/accessing-edgar-data.htm
 
@@ -25,14 +21,29 @@ Forms that we'll be concerned with (all forms are listed at
 https://www.sec.gov/forms):
 	10-Q: quarterly report and financial statements
 	10-K: annual report and financial statements
-	8-k: important events (commonly filed)
+	8-K: important events (commonly filed)
 	4: insider trading (gets us the stock symbol (issuerTradingSymbol))
+These can all have ammendments made, e.g. 10-Q/A
 '''
+import requests
+import json
+import re
+
+
+
+FINANCIAL_FORM_MAP = {
+	'annual': ['10-K','10-K/A'],
+	'quarterly': ['10-Q','10-Q/A'],
+}
+
+
 ARCHIVES_URL = 'https://www.sec.gov/Archives/'
 FULL_INDEX_URL = ARCHIVES_URL+'edgar/full-index/'
 INDEX_JSON = 'index.json'
 # company.idx gives us a list of all companies that filed in the period
-COMPANY_IDX = 'company.idx'
+COMPANY_IDX = 'company.idx' # sorted by company name
+FORM_IDX = 'form.idx' # sorted by form type
+#MASTER_IDX = 'master.idx' # sorted by cik
 #CRAWLER_IDX = 'crawler.idx'
 #XBRL_IDX = 'xbrl.idx'
 
@@ -63,6 +74,7 @@ def get_index_json(year='', quarter=''):
 		from index.json
 	'''
 	url = FULL_INDEX_URL+year+quarter+INDEX_JSON
+	# print('getting data at '+url)
 
 	index = requests.get(url)
 	text = index.text
@@ -72,9 +84,9 @@ def get_index_json(year='', quarter=''):
 	return json_text
 
 
-class Filing():
+class FilingInfo:
 	'''
-	Filing class will model crawler.idx filing data
+	FilingInfo class will model crawler.idx filing information
 	'''
 	def __init__(self, company, form, cik, date_filed, file):
 		self.company = company
@@ -88,25 +100,29 @@ class Filing():
 			self.company, self.form, self.cik, self.date_filed, self.url)
 
 
-def get_filings(year='', quarter=''):
+def get_filing_info(cik='', forms=[], year='', quarter=''):
 	'''
-	Return a tuple of (filing_headers, filings); filings has filing data
+	Return a tuple of (filing_info_headers, filing_info); filing_info is a List of FilingInfo
+		If forms are specified, only filings with the given value will be returned
+		e.g. 10-K, 10-Q, 3, 4, 5
 		year and quarter are defaulted to '', but can be replaced with an item.href
 		from index.json
 	'''
+	# can use form.idx to order by form type, but headers are in different order
+	# so would need to change code for this
 	url = FULL_INDEX_URL+year+quarter+COMPANY_IDX
+	print('getting filing info from '+url)
 
 	index = requests.get(url)
 	text = index.text
 
-	# we just want the filing list data, which starts after the "Company Name"
+	# we just want the filing info data, which starts after the "Company Name"
 	# header and ends at the File Name (for company.idx)
 	header_start_index = text.find('\nCompany Name')
 	header_end_index = text.find('File Name', header_start_index)+len('File Name')
 	header_text = text[header_start_index:header_end_index].replace('\n', '')
 
-	filing_list_text = text[text.index(header_text):]
-	#print(filing_list_text)
+	filing_info_text = text[text.index(header_text):]
 	# this also gives us the starting index for the data, e.g.:
 	'''
 	Company Name                                                  Form Type   CIK         Date Filed  File Name
@@ -116,8 +132,8 @@ def get_filings(year='', quarter=''):
 	1 800 FLOWERS COM INC                                         4           1084869     2018-07-03  edgar/data/1084869/0001084869-18-000015.txt  
 	'''
 
-	# split text into rows
-	filing_list = filing_list_text.split('\n')
+	# split filing_info_text into rows
+	filing_info_text_list = filing_info_text.split('\n')
 
 	# split filing_list into usable data
 	company_index = header_text.index('Company Name')
@@ -126,46 +142,42 @@ def get_filings(year='', quarter=''):
 	date_index = header_text.index('Date Filed')
 	file_index = header_text.index('File Name')
 
-	filing_list_data = [
-						Filing(
+	filing_info_raw = [
+						FilingInfo(
 						row[company_index:form_index].strip(), # Company Name
 						row[form_index:cik_index].strip(), # Form Type
 						row[cik_index:date_index].strip(), # CIK
 						row[date_index:file_index].strip(), # Date Filed
 						row[file_index:len(row)].strip() # File Name
 						)
-						 for row in filing_list if row.strip() != ''
-						]
+						 for index, row in enumerate(filing_info_text_list) 
+						 	if row.strip() != '' and
+						 	index == 0 or (
+						 		index != 1 and # ignore separator row
+								# Form Type should among forms or forms be default (all)
+								(row[form_index:cik_index].strip() in forms or forms == [])
+								# CIK should match cik or be default
+								and (row[cik_index:date_index].strip() == cik or cik == '')
+							)
+					]
 
-	# header is the first row (same as header_text)
-	filing_headers = filing_list_data[0]
-	# data is from the third row (after hearder and separator rows) onwards
-	filings = list(filter(None, filing_list_data))[2:]
+	# initialize empty in case no matches for forms
+	filing_info_headers = []
+	filing_info = []
 
-	return filing_headers, filings
+	if len(filing_info_raw) > 0:
+		# header is the first row (same as header_text)
+		filing_info_headers = filing_info_raw[0]
+		# data is from the 2nd row (after hearder) onwards
+		filing_info = list(filter(None, filing_info_raw))[1:]
 
-
-def test_get_filings(year='', quarter=''):
-	'''
-	TODO: Move to another module and import pytest
-	Validates get_filings()
-		year and quarter are defaulted to '', but can be replaced with an item.href
-		from index.json
-	'''
-	filing_headers, filings = get_filings(year, quarter)
-	# QA results
-	#print(filing_headers)
-	#print(filings[:100])
-	for filing in filings:
-		# validate date of filing
-		date_regex = re.compile('[0-9]{4}-[0-9]{2}-[0-9]{2}')
-		if date_regex.search(filing.date_filed) is None: 
-			print('Date filed is wrong: '+filing.date_filed)
-			print(filing)
+	return filing_info_headers, filing_info
 
 
-def get_all_forms(filings, form):
-	'''
-	Return a list of filings that have the given form
-	'''
-	return [filing for filing in filings if filing.form == form]
+
+def get_financial_filing_info(period, cik, year='', quarter=''):
+	if period not in FINANCIAL_FORM_MAP:
+		raise KeyError('period must be either "annual" or "quarterly"')
+
+	forms = FINANCIAL_FORM_MAP[period]
+	return get_filing_info(cik=cik, forms=forms, year=year, quarter=quarter)[1]

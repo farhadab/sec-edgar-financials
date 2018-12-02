@@ -1,7 +1,9 @@
-from sgml import *
+import pytest
+from filing.sgml import *
 
 def test_process_document():
 	'''
+	TODO: import pytest
 	Helps test result of process_document
 	'''
 	import json

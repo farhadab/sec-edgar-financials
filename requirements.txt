@@ -1,0 +1,6 @@
+pandas
+requests
+bs4
+re
+json
+pytest
