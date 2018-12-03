@@ -1,4 +1,4 @@
-#SEC EDGAR Financial Reports
+# SEC EDGAR Financial Reports
 Extract financial data from the SEC's EDGAR database.
 
 ## Intro
@@ -63,4 +63,3 @@ EDGAR doesn't categorize using stock symbols, since not all companies are public
 
 ## Roadmap
  * Allow statements to be gathered over a period of time (so not just for a given year+quarter)
- * 
