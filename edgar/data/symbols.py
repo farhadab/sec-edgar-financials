@@ -5,10 +5,10 @@ import pandas as pd
 import sys
 import requests
 # to overcome no module found error, use "python -m symbols.symbols"
-from filings.edgar import get_index_json, _get_filing_info
-from filings.filing import Filing
+from edgar.edgar import get_index_json, _get_filing_info, SYMBOLS_DATA_PATH
+from edgar.filing import Filing
 
-csv_path = './symbols/symbols.csv'
+csv_path = SYMBOLS_DATA_PATH
 
 def get_all_symbols():
 

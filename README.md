@@ -1,13 +1,15 @@
 #SEC EDGAR Financial Reports
+Extract financial data from the SEC's EDGAR database.
 
 ## Intro
-The purpose of this project is to allow users to conveniently extract financial data from the SEC's EDGAR database. This library, which at its core is a web-scraper, parses the financial data from the SGML into JSON format. This seamless conversion of filing data to application-ready data is what differentiates this library from other EDGAR libraries.
+The purpose of this project is to allow users to conveniently extract financial data from the SEC's EDGAR database. This library parses the financial data from the SGML into JSON format. This seamless conversion of filing data to application-ready data is what differentiates this library from other EDGAR libraries.
 
 While it is essentially a web-scraper, the EDGAR filing structure that it is built on, and the formatting of the filings themselves, should remain rather static.
 
+
 ## Example Usage
 
-The below example shows a basic usage of this package
+The below example shows a basic usage of this package.
 ```python
 from edgar.filings.stock import Stock
 
@@ -57,20 +59,8 @@ US companies are required by law to file forms with the SEC and these submission
 
 
 ## Data
-EDGAR doesn't categorize using stock symbols, since not all companies are publicly traded, but rather by a cik value. Can build cik-to-symbol database by running `python -m symbols.symbols`. It will append to what's already in place in symbols.csv (this means new companies will have to be manually added). At this point, however, it's recommended to manually add to this file as needed.
+EDGAR doesn't categorize using stock symbols, since not all companies are publicly traded, but rather by a cik value. Can build cik-to-symbol database by running `python -m edgar.data.symbols`. It will append to what's already in place in `symbols.csv` (this means new companies will have to be manually added). At this point, however, it's recommended to manually add to this file as needed as 1) it's a very resource intensive process and 2) they way it's currently coded just continues backwards from the last entry (i.e. wouldn't capture new cik/symbol combos that come to be).
 
-
-## Archive
-Uses EDGAR Filings for a company to predict stock price using machine learning
-
-Notes:
-Come up with machine learning approach to perform EDGAR document analysis. Show what's possible with some structure. Can use SEDAR for machine learning/natural language processing. Could use https://iextrading.com/developer/docs/#financials, but there's some bugs (e.g. https://github.com/iexg/IEX-API/issues/467)
-https://www.sec.gov/edgar/searchedgar/accessing-edgar-data.htm
-
-Daily index provides information on daily filings. 
-Full indexes offer a "bridge" between quarterly and daily indexes, compiling filings from the beginning of the current quarter through the previous business day. At the end of the quarter, the full index is rolled into a static quarterly index.
-https://www.sec.gov/Archives/edgar/full-index/index.json
-
-
-What's the hypothesis???
-Want to take the price at the close of the filing date vs the closing price the day before and see if the results of the filing
+## Roadmap
+ * Allow statements to be gathered over a period of time (so not just for a given year+quarter)
+ * 

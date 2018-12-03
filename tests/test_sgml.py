@@ -1,7 +1,7 @@
 import pytest
 import json
-from filings.sgml import Sgml
-from filings.dtd import DTD
+from edgar.sgml import Sgml
+from edgar.dtd import DTD
 	
 def setup_module(module):
 	print('setup_module      module:%s' % module.__name__)

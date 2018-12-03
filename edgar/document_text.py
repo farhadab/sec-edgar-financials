@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from filings.dtd import DTD
+from edgar.dtd import DTD
 
 class DocumentText:
 	dtd = DTD()

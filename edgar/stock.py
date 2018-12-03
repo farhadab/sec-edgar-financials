@@ -2,8 +2,8 @@
 This module ties it all together; it will be the main module that's used 
 '''
 import pandas as pd
-from filings.edgar import get_financial_filing_info
-from filings.filing import Filing
+from edgar.edgar import get_financial_filing_info, SYMBOLS_DATA_PATH
+from edgar.filing import Filing
 
 class Stock:
 	def __init__(self, symbol, period='annual', year='', quarter=0):
@@ -14,7 +14,7 @@ class Stock:
 
 
 	def _find_cik(self):
-		df = pd.read_csv('./symbols/symbols.csv', converters={'cik' : str})
+		df = pd.read_csv(SYMBOLS_DATA_PATH, converters={'cik' : str})
 		try:
 			cik = df.loc[df['symbol'] == self.symbol]['cik'].iloc[0]
 			print('cik for {} is {}'.format(self.symbol, cik))
@@ -50,14 +50,3 @@ class Stock:
 
 class NoFilingInfoException(Exception):
 	pass
-
-
-period = 'quarterly' # or 'annual', which is the default for Stock()
-# e.g. the next line will give you just the latest annual results
-# stock = Stock('AAPL')
-year = 2016
-quarter = 1 # 1, 2, 3, or 4
-stock = Stock(symbol='AAPL', period=period, year=year, quarter=quarter)
-stock.get_statements_of_income()
-stock.get_balance_sheets()
-stock.get_cash_flows()

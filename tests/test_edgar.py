@@ -1,7 +1,7 @@
 import pytest
 import re
 from datetime import datetime
-from filings.edgar import get_filing_info, SUPPORTED_FORMS, InvalidInputException
+from edgar.edgar import get_filing_info, SUPPORTED_FORMS, InvalidInputException
 	
 def setup_module(module):
 	print('setup_module      module:%s' % module.__name__)

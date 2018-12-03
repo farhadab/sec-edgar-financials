@@ -29,6 +29,10 @@ import requests
 import json
 import re
 from datetime import datetime
+import os
+
+
+SYMBOLS_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data', 'symbols.csv')
 
 
 FINANCIAL_FORM_MAP = {
@@ -50,40 +54,24 @@ FORM_IDX = 'form.idx' # sorted by form type
 #XBRL_IDX = 'xbrl.idx'
 
 
+# don't need the following structures, commenting them just in case
+# class Directory():
+# 	'''
+# 	Directory and Item classes will be used to help model and serve as a reference
+# 	'''
+# 	def __init__(self, item, name, parent_dir):
+# 		self.item = item # array of items in the directory
+# 		self.name = name # name of the directory
+# 		self.parent_dir = parent_dir # location of parent directory
 
-class Directory():
-	'''
-	Directory and Item classes will be used to help model and serve as a reference
-	'''
-	def __init__(self, item, name, parent_dir):
-		self.item = item # array of items in the directory
-		self.name = name # name of the directory
-		self.parent_dir = parent_dir # location of parent directory
+# class Item():
+# 	def __init__(self, last_modified, name, type, href, size):
+# 		self.last_modified = last_modified # MM/dd/YYYY hh:mm:ss AM/PM
+# 		self.name = self.name
+# 		self.type = self.type # dir or file
+# 		self.href = self.href # relative to directory
+# 		self.size = self.size
 
-class Item():
-	def __init__(self, last_modified, name, type, href, size):
-		self.last_modified = last_modified # MM/dd/YYYY hh:mm:ss AM/PM
-		self.name = self.name
-		self.type = self.type # dir or file
-		self.href = self.href # relative to directory
-		self.size = self.size
-
-
-def get_index_json(year='', quarter=''):
-	'''
-	Returns json of index.json
-		year and quarter are defaulted to '', but can be replaced with an item.href
-		from index.json
-	'''
-	url = FULL_INDEX_URL+year+quarter+INDEX_JSON
-	# print('getting data at '+url)
-
-	index = requests.get(url)
-	text = index.text
-	json_text = json.loads(text)
-	#print(text)
-	#print(json['directory']['item'][0]['href'])
-	return json_text
 
 
 class FilingInfo:
@@ -100,12 +88,27 @@ class FilingInfo:
 	def __repr__(self):
 		return '[{0}, {1}, {2}, {3}, {4}]'.format(
 			self.company, self.form, self.cik, self.date_filed, self.url)
+		
 
 
+def get_index_json(year='', quarter=''):
+	'''
+	Returns json of index.json
+		year and quarter are defaulted to '', but can be replaced with an item.href
+		from index.json
+	'''
+	url = FULL_INDEX_URL+year+quarter+INDEX_JSON
+	# print('getting data at '+url)
 
+	response = requests.get(url)
+	response.encoding = 'utf-8'
+	text = response.text
 
-class InvalidInputException(Exception):
-	pass
+	json_text = json.loads(text)
+	#print(text)
+	#print(json['directory']['item'][0]['href'])
+	return json_text
+
 
 
 def get_filing_info(cik='', forms=[], year=0, quarter=0):
@@ -206,3 +209,9 @@ def get_financial_filing_info(period, cik, year='', quarter=''):
 
 	forms = FINANCIAL_FORM_MAP[period]
 	return get_filing_info(cik=cik, forms=forms, year=year, quarter=quarter)[1]
+
+
+
+########## Exceptions ##########
+class InvalidInputException(Exception):
+	pass

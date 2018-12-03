@@ -2,10 +2,10 @@
 Logic related to the handling of filings and documents
 '''
 import requests
-from filings.document import Document
-from filings.sgml import Sgml
-from filings.dtd import DTD
-from filings.financials import get_financial_report
+from edgar.document import Document
+from edgar.sgml import Sgml
+from edgar.dtd import DTD
+from edgar.financials import get_financial_report
 
 
 FILING_SUMMARY_FILE = 'FilingSummary.xml'
