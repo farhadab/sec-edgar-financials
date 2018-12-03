@@ -24,7 +24,7 @@ stock.get_balance_sheets()
 stock.get_cash_flows()
 ```
 
-An example of the output for the statements of income is shown below, in JSON format for easy communication (actual output of the call is a FinancialReport Object).
+An example of the output for the statements of income is shown below.
 ```json
 {
 	"company": "AAPL",
@@ -44,8 +44,8 @@ An example of the output for the statements of income is shown below, in JSON fo
 	]
 }
 ```
-
-A giving financial statement report will actually contain `reports` for multiple periods/dates. The `map` in each one of these reports contains XBRL elements (e.g. "SalesRevenueNet"), with their namespace found as a prefix (e.g. "us-gaap"). More information on XBRL can be found at https://xbrl.us/data-rule/dqc_0015-le/.
+ * Note that the above is in JSON format just for the purposes of easy communication and that the actual output of the call is a `FinancialReport` Object from the `edgar.financials` module. To get the JSON, you can use `FinancialReportEncoder` from `edgar.financials`, e.g. `FinancialReportEncoder().encode(financial_report)`.
+ * As we can see above, a given `FinancialReport` will actually contain `reports` for multiple periods/dates. The `map` in each one of these reports contains XBRL elements (e.g. "SalesRevenueNet"), with their namespace found as a prefix (e.g. "us-gaap"). More information on XBRL can be found at https://xbrl.us/data-rule/dqc_0015-le/.
 
 ## Terminology
 US companies are required by law to file forms with the SEC and these submissions are stored in the EDGAR file system (database), which is organized by year and then by quarter. Below is the terminology we use to navigate the data available to us in this database.
@@ -63,3 +63,4 @@ EDGAR doesn't categorize using stock symbols, since not all companies are public
 
 ## Roadmap
  * Allow statements to be gathered over a period of time (so not just for a given year+quarter)
+ * Clean up logging + error handling
