@@ -10,27 +10,28 @@ from filings.financials import get_financial_report
 
 FILING_SUMMARY_FILE = 'FilingSummary.xml'
 
-# used in parsing financial data; these are the statements we'll be parsing
-STATEMENT_SHORT_NAMES = [
-	'consolidated statements of income'
-	,'consolidated statements of operations'
-	,'consolidated balance sheets'
-	,'consolidated statements of cash flows'
-	,'condensed consolidated statements of income (unaudited)'
-	,'condensed consolidated balance sheets (current period unaudited)'
-	,'condensed consolidated balance sheets (unaudited)'
-	,'condensed consolidated statements of cash flows (unaudited)'
-]
+
 
 class Statements:
-	statements_of_income = ['consolidated statements of income', 'consolidated statements of operations',
-					'condensed consolidated statements of income (unaudited)' 
+	# used in parsing financial data; these are the statements we'll be parsing
+	statements_of_income = ['consolidated statements of income',
+					'consolidated statements of operations',
+					'condensed consolidated statements of income (unaudited)',
+					'condensed consolidated statements of income',
+					'condensed consolidated statements of operations'
 					]
 	balance_sheets = ['consolidated balance sheets',
 					'condensed consolidated balance sheets (current period unaudited)',
-					'condensed consolidated balance sheets (unaudited)'
+					'condensed consolidated balance sheets (unaudited)',
+					'condensed consolidated balance sheets',
 					]
-	cash_flows = ['consolidated statements of cash flows', 'condensed consolidated statements of cash flows (unaudited)']
+	cash_flows = ['consolidated statements of cash flows',
+					'condensed consolidated statements of cash flows (unaudited)',
+					'condensed consolidated statements of cash flows'
+					]
+
+	all_statements = statements_of_income + balance_sheets + cash_flows
+
 
 
 class Filing:
@@ -43,7 +44,11 @@ class Filing:
 		self.url = url
 		# made this company instead of symbol since not all edgar companies are publicly traded
 		self.company = company
-		text = requests.get(url).text
+
+		response = requests.get(url)
+		response.encoding = 'utf-8'
+		text = response.text
+		
 		self.text = text
 
 		print('Processing SGML at '+url)
@@ -64,13 +69,15 @@ class Filing:
 			print(e)
 
 
+
 	def get_financial_data(self):
 		'''
 		This is mostly just for easy QA to return all financial statements
 		in a given file, but the intended workflow is for he user to pick
 		the specific statement they want (income, balance, cash flows)
 		'''
-		return self._get_financial_data(STATEMENT_SHORT_NAMES, True)
+		return self._get_financial_data(self.STATEMENTS.all_statements, True)
+
 
 
 	def _get_financial_data(self, statement_short_names, get_all):
@@ -96,6 +103,7 @@ class Filing:
 		return financial_data
 
 
+
 	def _get_statement(self, statement_short_names):
 		'''
 		Return a list of tuples of (short_names, filenames) for
@@ -116,16 +124,6 @@ class Filing:
 
 		# print(statement_names)
 		return statement_names
-
-
-	def get_statements_of_income(self):
-		return self._get_financial_data(self.STATEMENTS.statements_of_income, False)
-
-	def get_balance_sheets(self):
-		return self._get_financial_data(self.STATEMENTS.balance_sheets, False)
-
-	def get_cash_flows(self):
-		return self._get_financial_data(self.STATEMENTS.cash_flows, False)
 
 
 
@@ -153,3 +151,14 @@ class Filing:
 				return filename
 		print('could not find anything for ShortName '+report_short_name.lower())
 		return None
+
+
+
+	def get_statements_of_income(self):
+		return self._get_financial_data(self.STATEMENTS.statements_of_income, False)
+
+	def get_balance_sheets(self):
+		return self._get_financial_data(self.STATEMENTS.balance_sheets, False)
+
+	def get_cash_flows(self):
+		return self._get_financial_data(self.STATEMENTS.cash_flows, False)

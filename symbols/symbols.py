@@ -5,7 +5,7 @@ import pandas as pd
 import sys
 import requests
 # to overcome no module found error, use "python -m symbols.symbols"
-from filings.edgar import get_index_json, get_filing_info
+from filings.edgar import get_index_json, _get_filing_info
 from filings.filing import Filing
 
 csv_path = './symbols/symbols.csv'
@@ -70,7 +70,7 @@ def get_all_symbols():
 							
 						print('year {0} quarter {1}'.format(year, quarter))
 						
-						filing_headers, filings = get_filing_info(forms=forms, year=year, quarter=quarter)
+						filing_headers, filings = _get_filing_info(forms=forms, year=year, quarter=quarter)
 						
 						for filing in filings:
 							filing_url = filing.url

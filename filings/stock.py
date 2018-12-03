@@ -6,7 +6,7 @@ from filings.edgar import get_financial_filing_info
 from filings.filing import Filing
 
 class Stock:
-	def __init__(self, symbol, period='annual', year='', quarter=''):
+	def __init__(self, symbol, period='annual', year='', quarter=0):
 		self.symbol = symbol
 		self.cik = self._find_cik()
 		self.period = period
@@ -23,11 +23,11 @@ class Stock:
 			raise IndexError('could not find cik, must add to symbols.csv') from None
 
 
-	def _get_filing(self, period, year='', quarter=''):
+	def _get_filing(self, period, year='', quarter=0):
 		filing_info_list = get_financial_filing_info(period=period, cik=self.cik, year=year, quarter=quarter)
 
 		if len(filing_info_list) == 0:
-			raise NoFilingInfoException('No filing info found. Try a different period, year, and/or quarter.')
+			raise NoFilingInfoException('No filing info found. Try a different period (annual/quarterly), year, and/or quarter.')
 
 		filing_info = filing_info_list[0]
 
@@ -44,15 +44,20 @@ class Stock:
 		return self.filing.get_balance_sheets()
 
 	def get_cash_flows(self):
-		return self.filing.cash_flows()
+		return self.filing.get_cash_flows()
 
 
 
 class NoFilingInfoException(Exception):
 	pass
 
-period = 'quarterly'
-stock = Stock(symbol='SPWR', period=period)
+
+period = 'quarterly' # or 'annual', which is the default for Stock()
+# e.g. the next line will give you just the latest annual results
+# stock = Stock('AAPL')
+year = 2016
+quarter = 1 # 1, 2, 3, or 4
+stock = Stock(symbol='AAPL', period=period, year=year, quarter=quarter)
 stock.get_statements_of_income()
 stock.get_balance_sheets()
 stock.get_cash_flows()

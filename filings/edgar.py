@@ -28,14 +28,16 @@ These can all have ammendments made, e.g. 10-Q/A
 import requests
 import json
 import re
-
+from datetime import datetime
 
 
 FINANCIAL_FORM_MAP = {
 	'annual': ['10-K','10-K/A'],
 	'quarterly': ['10-Q','10-Q/A'],
 }
+SUPPORTED_FORMS = FINANCIAL_FORM_MAP['annual'] + FINANCIAL_FORM_MAP['quarterly'] + ['3', '4', '5']
 
+EDGAR_MIN_YEAR = 1993
 
 ARCHIVES_URL = 'https://www.sec.gov/Archives/'
 FULL_INDEX_URL = ARCHIVES_URL+'edgar/full-index/'
@@ -100,7 +102,24 @@ class FilingInfo:
 			self.company, self.form, self.cik, self.date_filed, self.url)
 
 
-def get_filing_info(cik='', forms=[], year='', quarter=''):
+
+
+class InvalidInputException(Exception):
+	pass
+
+
+def get_filing_info(cik='', forms=[], year=0, quarter=0):
+	current_year = datetime.now().year
+
+	if year!=0 and ((len(str(year)) != 4) or year < EDGAR_MIN_YEAR or year > current_year):
+		raise InvalidInputException('{} is not a supported year'.format(year))
+	if quarter not in [0, 1, 2, 3, 4]:
+		raise InvalidInputException('Quarter must be 1, 2, 3, or 4. 0 indicates default (latest)')
+
+	return _get_filing_info(cik=cik, forms=forms, year=('' if year==0 else str(year)+'/'), quarter=('' if quarter==0 else 'QTR{}/'.format(quarter)))
+
+
+def _get_filing_info(cik='', forms=[], year='', quarter=''):
 	'''
 	Return a tuple of (filing_info_headers, filing_info); filing_info is a List of FilingInfo
 		If forms are specified, only filings with the given value will be returned
@@ -110,11 +129,17 @@ def get_filing_info(cik='', forms=[], year='', quarter=''):
 	'''
 	# can use form.idx to order by form type, but headers are in different order
 	# so would need to change code for this
-	url = FULL_INDEX_URL+year+quarter+COMPANY_IDX
+	for form in forms:
+		if form not in SUPPORTED_FORMS:
+			raise InvalidInputException('{} is not a supported form'.format(form))
+
+	url = '{}{}{}{}'.format(FULL_INDEX_URL, year, quarter, COMPANY_IDX)
 	print('getting filing info from '+url)
 
-	index = requests.get(url)
-	text = index.text
+	response = requests.get(url)
+	response.encoding = 'utf-8'
+	text = response.text
+	# print(text)
 
 	# we just want the filing info data, which starts after the "Company Name"
 	# header and ends at the File Name (for company.idx)
@@ -152,13 +177,13 @@ def get_filing_info(cik='', forms=[], year='', quarter=''):
 						)
 						 for index, row in enumerate(filing_info_text_list) 
 						 	if row.strip() != '' and
-						 	index == 0 or (
+						 	(index == 0 or (
 						 		index != 1 and # ignore separator row
 								# Form Type should among forms or forms be default (all)
 								(row[form_index:cik_index].strip() in forms or forms == [])
 								# CIK should match cik or be default
 								and (row[cik_index:date_index].strip() == cik or cik == '')
-							)
+							))
 					]
 
 	# initialize empty in case no matches for forms

@@ -55,6 +55,13 @@ class FinancialReport:
 	def __repr__(self):
 		return str(self.__dict__)
 
+
+
+
+
+class MetaDataParsingException(Exception):
+	pass
+
 # https://pypi.org/project/python-xbrl/
 
 '''
@@ -91,7 +98,8 @@ The next part differs based on 10-K and 10-Q
         Consolidated Statements Of Operations - USD ($)<br> shares in Millions,
         $ in Millions
 '''
-NUM_META_DATA_ROWS = 2
+MAX_META_DATA_ROWS = 2
+
 
 
 def get_financial_report(company, financial_html_text):
@@ -99,6 +107,7 @@ def get_financial_report(company, financial_html_text):
 	financial_report = FinancialReport(company, financial_info)
 	print(FinancialReportEncoder().encode(financial_report)) # for easy QA using JSON
 	return financial_report
+
 
 
 def process_financial_info(financial_html_text):
@@ -114,9 +123,9 @@ def process_financial_info(financial_html_text):
 	dates, period_units, unit_text = _get_statement_meta_data(rows)
 
 	for i, date in enumerate(dates):
-		financial_info += [FinancialInfo(date, period_units[i], {})]
+		financial_info.append(FinancialInfo(date, period_units[i], {}))
 
-	for row_num, row in enumerate(rows[NUM_META_DATA_ROWS:]):
+	for row_num, row in enumerate(rows):
 		data = row.find_all('td')
 
 		xbrl_element = None
@@ -124,8 +133,16 @@ def process_financial_info(financial_html_text):
 		numeric_data_available = False
 
 		for index, info in enumerate(data):
-			info_text = info.get_text().replace('\n', '')
-			class_list = info.attrs['class']
+			info_text = info.get_text().strip()
+
+			class_list = None
+			try:
+				# handle cases where the row is just a separator or something
+				class_list = info.attrs['class']
+			except KeyError as e:
+				# print('KeyError {} from below table data, moving along'.format(e))
+				# print(info)
+				continue
 
 			processed_financial_value = None
 
@@ -149,60 +166,101 @@ def process_financial_info(financial_html_text):
 				# 	print(xbrl_element)
 
 			if processed_financial_value is not None:
-				financial_info[index-1].map[xbrl_element] = FinancialElement(label, processed_financial_value)
+				# print(index)
+				if index-1 not in range(len(financial_info)):
+					print('index-1 {} is too big to capture {}'.format(index-1, processed_financial_value))
+				financial_info_map = financial_info[index-1].map
 
+				if xbrl_element not in financial_info_map:
+					# handles adjustment details
+					# e.g. https://www.sec.gov/Archives/edgar/data/867773/0000867773-18-000082.txt
+					financial_info_map[xbrl_element] = FinancialElement(label, processed_financial_value)
+
+
+	# clean reports
+	# colspans sometimes cause duplicate reports with empty maps
+	for fi in financial_info:
+		if not fi.map:
+			financial_info.remove(fi)
 
 	return financial_info
+
 
 
 def _get_statement_meta_data(rows):
 	dates = []
 	period_units = []
 	unit_text = None
+	is_snapshot = False
 
-	# we only use the first two rows
-	if(len(rows)<NUM_META_DATA_ROWS):
-		print('not enough rows of data')
-	else:
-		for row_num, row in enumerate(rows[:NUM_META_DATA_ROWS]):
-			# meta data comes from the table headers
-			data = row.find_all('th')
+	title_repeat = 0
 
-			for index, info in enumerate(data):
-				info_text = info.get_text().replace('\n', '')
-
-				class_list = info.attrs['class']
-				
-				if row_num == 0:
-
-					if 'tl' in class_list:
-						# first th with tl class has title and unit specification
-						info_list = info.find('div').get_text('|', strip=True).split('|')
-						# e.g. shares in Thousands, $ in Millions
-						unit_text = info_list[1]
-						# e.g. CONSOLIDATED STATEMENTS OF INCOME - USD ($)
-						title = info_text.replace(unit_text, '').strip()
-
-					elif 'th' in class_list:
-						# Period unit of measurement (e.g. 12 Months Ended)
-						# Balance sheets are a snapshot, so no period
-						try:
-							for col in range(int(info.attrs['colspan'])):
-								period_units = period_units + [_process_period(info_text)] # usually months; use regex for #?
-						except KeyError:
-							period_units = period_units + [None]
-							dates = dates + [info_text]
+	# we only use as many rows as needed to gather meta data
+	for row_num, row in enumerate(rows[:MAX_META_DATA_ROWS]):
+		# meta data comes from the table headers
+		data = row.find_all('th')
 
 
-				elif row_num == 1 and 'th' in class_list:
-					# second row indicates dates of data to come
-					dates = dates + [info_text]
+		for index, info in enumerate(data):
+			info_text = info.get_text().replace('\n', '')
+
+			class_list = info.attrs['class']
+			
+			repeat = 1 if 'colspan' not in info.attrs else int(info.attrs['colspan'])
+
+			if row_num == 0:
+
+				if 'tl' in class_list:
+					# first col is for xbrl_element, so we're concerned if it has a colspan greater than 1
+					# so that we can determine our table structure
+					title_repeat = 0 if 'colspan' not in info.attrs or int(info.attrs['colspan']) == 1 else int(info.attrs['colspan']) - 1
+					# first th with tl class has title and unit specification
+					info_list = info.find('div').get_text('|', strip=True).split('|')
+					# e.g. shares in Thousands, $ in Millions
+					unit_text = info_list[1]
+					# e.g. CONSOLIDATED STATEMENTS OF INCOME - USD ($)
+					title = info_text.replace(unit_text, '').strip()
+
+					if 'balance' in title.lower():
+						is_snapshot = True
+
+				elif 'th' in class_list:
+					# Period unit of measurement (e.g. 12 Months Ended)
+					# Balance sheets are a snapshot, so no period
+					if index == 1:
+						# repeat just the first one to cover the excess title colspan
+						# use index 1 because 0 is title
+						repeat += title_repeat
+
+					for i in range(repeat):
+						if is_snapshot:
+							period_units.append(None)
+							dates.append(info_text)
+						else:
+							period_units.append(_process_period(info_text))
+
+
+			elif row_num == 1 and 'th' in class_list:
+				# second row indicates dates of data to come
+				if index == 0:
+					# repeat just the first one to cover the excess title colspan
+					repeat += title_repeat
+
+				for i in range(repeat):
+					dates.append(info_text)
+
+
+	if len(dates) != len(period_units):
+		raise MetaDataParsingException('Potential parsing bug: len dates {} != len period_units {}'.format(dates, period_units))
 
 	return dates, period_units, unit_text
 
 
+
 def _process_period(info_text):
+	# assumes it's months
 	return int(re.sub('[^0-9]', '', info_text))
+
 
 
 def _process_xbrl_element(info):
@@ -220,6 +278,7 @@ def _process_xbrl_element(info):
 		).replace('\', window );', '')
 
 	return xbrl_element
+
 
 
 def _process_financial_value(text, xbrl_element, unit_text):
@@ -252,6 +311,3 @@ def _process_financial_value(text, xbrl_element, unit_text):
 		print(amount_text+' is not numeric')
 
 	return value
-
-
-
