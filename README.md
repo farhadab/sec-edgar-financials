@@ -59,7 +59,9 @@ US companies are required by law to file forms with the SEC and these submission
 
 
 ## Data
-EDGAR doesn't categorize using stock symbols, since not all companies are publicly traded, but rather by a cik value. Can build cik-to-symbol database by running `python -m edgar.data.symbols`. It will append to what's already in place in `symbols.csv` (this means new companies will have to be manually added). At this point, however, it's recommended to manually add to this file as needed as 1) it's a very resource intensive process and 2) they way it's currently coded just continues backwards from the last entry (i.e. wouldn't capture new cik/symbol combos that come to be).
+EDGAR doesn't categorize using stock symbols, since not all companies are publicly traded, but rather by a cik value. To help reconcile the issue of mapping a stock symbol (easy for users) to a cik, created the cik-to-symbol database, `edgar.data.symbols.csv`, using `edgar.data.symbols.py`.
+
+It should have most companies that have filed on or before November 2018. When the python file runs, it will append to what's already in place in the csv (this means new companies will have to be manually added). At this point, however, it's recommended to manually add to this file as needed as 1) it's a very resource intensive process and 2) they way it's currently coded just continues backwards from the last entry (i.e. wouldn't capture new cik/symbol combos that come along).
 
 ## Roadmap
  * Allow statements to be gathered over a period of time (so not just for a given year+quarter)

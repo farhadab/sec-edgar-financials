@@ -41,3 +41,14 @@ def test_get_cash_flows():
 	result = stock.get_cash_flows()
 	# mock up info
 	assert 1 == 1
+
+
+
+############## Negative Testing ##############
+
+def test_init_unknown_symbol():
+	try:
+		Stock(symbol='ZZZZZZZZZZZZZZZ')
+		assert False
+	except IndexError:
+	    assert True

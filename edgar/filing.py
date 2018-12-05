@@ -1,7 +1,7 @@
 '''
 Logic related to the handling of filings and documents
 '''
-import requests
+from edgar.requests_wrapper import GetRequest
 from edgar.document import Document
 from edgar.sgml import Sgml
 from edgar.dtd import DTD
@@ -45,8 +45,7 @@ class Filing:
 		# made this company instead of symbol since not all edgar companies are publicly traded
 		self.company = company
 
-		response = requests.get(url)
-		response.encoding = 'utf-8'
+		response = GetRequest(url).response
 		text = response.text
 		
 		self.text = text

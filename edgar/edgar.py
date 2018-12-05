@@ -25,7 +25,7 @@ https://www.sec.gov/forms):
 	4: insider trading (gets us the stock symbol (issuerTradingSymbol))
 These can all have ammendments made, e.g. 10-Q/A
 '''
-import requests
+from edgar.requests_wrapper import GetRequest
 import json
 import re
 from datetime import datetime
@@ -100,8 +100,7 @@ def get_index_json(year='', quarter=''):
 	url = FULL_INDEX_URL+year+quarter+INDEX_JSON
 	# print('getting data at '+url)
 
-	response = requests.get(url)
-	response.encoding = 'utf-8'
+	response = GetRequest(url).response
 	text = response.text
 
 	json_text = json.loads(text)
@@ -139,8 +138,7 @@ def _get_filing_info(cik='', forms=[], year='', quarter=''):
 	url = '{}{}{}{}'.format(FULL_INDEX_URL, year, quarter, COMPANY_IDX)
 	print('getting filing info from '+url)
 
-	response = requests.get(url)
-	response.encoding = 'utf-8'
+	response = GetRequest(url).response
 	text = response.text
 	# print(text)
 

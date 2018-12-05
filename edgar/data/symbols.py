@@ -3,7 +3,6 @@ This is used to backload symbols.csv in order to map a cik to a symbol
 '''
 import pandas as pd
 import sys
-import requests
 # to overcome no module found error, use "python -m symbols.symbols"
 from edgar.edgar import get_index_json, _get_filing_info, SYMBOLS_DATA_PATH
 from edgar.filing import Filing
