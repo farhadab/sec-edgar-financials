@@ -51,21 +51,17 @@ class Filing:
 		self.text = text
 
 		print('Processing SGML at '+url)
-		try:
-			dtd = DTD()
-			sgml = Sgml(text, dtd)
+		
+		dtd = DTD()
+		sgml = Sgml(text, dtd)
 
-			self.sgml = sgml
+		self.sgml = sgml
 
-			# {filename:Document}
-			self.documents = {}
-			for document_raw in sgml.map[dtd.sec_document.tag][dtd.document.tag]:
-				document = Document(document_raw)
-				self.documents[document.filename] = document
-
-		except KeyError as e:
-			print('Could not parse sgml')
-			print(e)
+		# {filename:Document}
+		self.documents = {}
+		for document_raw in sgml.map[dtd.sec_document.tag][dtd.document.tag]:
+			document = Document(document_raw)
+			self.documents[document.filename] = document
 
 
 

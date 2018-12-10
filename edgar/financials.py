@@ -105,7 +105,6 @@ MAX_META_DATA_ROWS = 2
 def get_financial_report(company, financial_html_text):
 	financial_info = process_financial_info(financial_html_text)
 	financial_report = FinancialReport(company, financial_info)
-	print(FinancialReportEncoder().encode(financial_report)) # for easy QA using JSON
 	return financial_report
 
 

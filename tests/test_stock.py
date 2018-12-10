@@ -1,6 +1,7 @@
 import pytest
 import json
 from edgar.stock import Stock
+from edgar.financials import FinancialReportEncoder
 
 	
 def setup_module(module):
@@ -15,6 +16,7 @@ def test_get_statements_of_income():
 	quarter = 1 # 1, 2, 3, or 4
 	stock = Stock(symbol='AAPL', period=period, year=year, quarter=quarter)
 	result = stock.get_statements_of_income()
+	print(FinancialReportEncoder().encode(result)) # for easy QA using JSON
 	# mock up info
 	assert 1 == 1
 
@@ -27,6 +29,7 @@ def test_get_balance_sheets():
 	quarter = 4 # 1, 2, 3, or 4
 	stock = Stock(symbol='SPWR', period=period, year=year, quarter=quarter)
 	result = stock.get_balance_sheets()
+	print(FinancialReportEncoder().encode(result)) # for easy QA using JSON
 	# mock up info
 	assert 1 == 1
 
@@ -39,6 +42,7 @@ def test_get_cash_flows():
 	quarter = 4 # 1, 2, 3, or 4
 	stock = Stock(symbol='SPWR', period=period, year=year, quarter=quarter)
 	result = stock.get_cash_flows()
+	print(FinancialReportEncoder().encode(result)) # for easy QA using JSON
 	# mock up info
 	assert 1 == 1
 

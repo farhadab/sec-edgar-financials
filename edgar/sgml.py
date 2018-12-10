@@ -4,15 +4,20 @@ given a DTD (dtd)
 '''
 import re
 
+
+class SgmlException(Exception):
+	pass
+
+
 class Sgml:
 
 	def __init__(self, document, dtd):
 		self.dtd = dtd
 		self.document = document
-		self.map = self.parse_sgml(document)
+		self.map = self._parse_sgml(document)
 
 
-	def parse_sgml(self, data) -> dict():
+	def _parse_sgml(self, data) -> dict():
 		'''
 		Consumes an SGML document and returns a json/dictionary using recursion
 
@@ -37,79 +42,82 @@ class Sgml:
 
 		result = {}
 
-		tag = self._get_next_tag(data)
-		# print('tag: '+tag)
-		# print('data: '+data)
-		# print('')
+		try:
+			tag = self._get_next_tag(data)
+			# print('tag: '+tag)
+			# print('data: '+data)
+			# print('')
 
-		if tag in self.dtd.map: # also covers the case where tag is None
-			tag_start = data.find(tag)
-			tag_end = tag_start+len(tag)
+			if tag in self.dtd.map: # also covers the case where tag is None
+				tag_start = data.find(tag)
+				tag_end = tag_start+len(tag)
 
-			element = self.dtd.map[tag]
-			value = None
-			end = len(data)
+				element = self.dtd.map[tag]
+				value = None
+				end = len(data)
 
-			if not element.has_end_tag:
-				# extract data until next tag
-				next_tag = self._get_next_tag(data[tag_end:])
-				next_tag_start = len(data) # using data since this is used in end
-				if next_tag is not None:
-					# print('next_tag is '+next_tag)
-					next_tag_start = data.find(next_tag)
-				value = data[tag_end:next_tag_start].strip()
-				self._add_result(result, tag, value)
-				end = next_tag_start
-			else:
-				# has an end tag
-				end_tag = element.get_end_tag_string()
-				# print('end_tag is '+end_tag)
-				end_tag_start = data.find(end_tag)
-				enclosed_data = data[tag_end:end_tag_start]
-				# print(enclosed_data)
-				contains_edgar_tags = False
-				children = self.dtd.get_all_children(tag)
-				# print(children)
-
-				for child in children:
-					if child in enclosed_data:
-						contains_edgar_tags = True
-						break
-					else:
-						# the tag isn't in the enclosed_data, so we add empty result
-						child_element = self.dtd.map[child]
-						
-						if child_element.required:
-							child_no_value = [] if child_element.repeats else ''
-							self._add_result(result, child, child_no_value)
-
-				if contains_edgar_tags:
-					# has children, recurse over enclosed data
-					# print('recursing over tag '+tag)
-					# print(enclosed_data)
-					value = self.parse_sgml(enclosed_data)
-					# print('done recursing over tag '+tag)
+				if not element.has_end_tag:
+					# extract data until next tag
+					next_tag = self._get_next_tag(data[tag_end:])
+					next_tag_start = len(data) # using data since this is used in end
+					if next_tag is not None:
+						# print('next_tag is '+next_tag)
+						next_tag_start = data.find(next_tag)
+					value = data[tag_end:next_tag_start].strip()
 					self._add_result(result, tag, value)
-					
+					end = next_tag_start
 				else:
-					# no children, extract the enclosed data
-					value = enclosed_data.strip()
-					self._add_result(result, tag, value)
+					# has an end tag
+					end_tag = element.get_end_tag_string()
+					# print('end_tag is '+end_tag)
+					end_tag_start = data.find(end_tag)
+					enclosed_data = data[tag_end:end_tag_start]
+					# print(enclosed_data)
+					contains_edgar_tags = False
+					children = self.dtd.get_all_children(tag)
+					# print(children)
 
-				end = end_tag_start + len(end_tag)
-					
-			if end < len(data):
-				# there is additional data outside of what's enclosed, recurse
-				additional_data = data[end:]
-				# print('recursing over additional data for tag '+tag)
-				# print(additional_data)
-				value = self.parse_sgml(additional_data)
-				# print('done recursing over additional data for tag '+tag)
-				key = self._get_next_tag(additional_data)
-				# value will be dict, so no key is needed
-				self._add_result(result, None, value)
+					for child in children:
+						if child in enclosed_data:
+							contains_edgar_tags = True
+							break
+						else:
+							# the tag isn't in the enclosed_data, so we add empty result
+							child_element = self.dtd.map[child]
+							
+							if child_element.required:
+								child_no_value = [] if child_element.repeats else ''
+								self._add_result(result, child, child_no_value)
 
+					if contains_edgar_tags:
+						# has children, recurse over enclosed data
+						# print('recursing over tag '+tag)
+						# print(enclosed_data)
+						value = self._parse_sgml(enclosed_data)
+						# print('done recursing over tag '+tag)
+						self._add_result(result, tag, value)
+						
+					else:
+						# no children, extract the enclosed data
+						value = enclosed_data.strip()
+						self._add_result(result, tag, value)
 
+					end = end_tag_start + len(end_tag)
+						
+				if end < len(data):
+					# there is additional data outside of what's enclosed, recurse
+					additional_data = data[end:]
+					# print('recursing over additional data for tag '+tag)
+					# print(additional_data)
+					value = self._parse_sgml(additional_data)
+					# print('done recursing over additional data for tag '+tag)
+					key = self._get_next_tag(additional_data)
+					# value will be dict, so no key is needed
+					self._add_result(result, None, value)
+
+		except KeyError as e:
+			raise SgmlException('Could not parse sgml: {}'.format(e))
+		
 		return result
 
 

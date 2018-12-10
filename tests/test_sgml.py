@@ -1,6 +1,6 @@
 import pytest
 import json
-from edgar.sgml import Sgml
+from edgar.sgml import Sgml, SgmlException
 from edgar.dtd import DTD
 	
 def setup_module(module):
@@ -16,3 +16,13 @@ def test_parse_sgml():
 	#print(json_document)
 
 	assert json_document == '{"<SEC-DOCUMENT>": {"<SEC-HEADER>": {"<ACCEPTANCE-DATETIME>": "20180808170227"}, "<DOCUMENT>": [{"<TYPE>": "4", "<SEQUENCE>": "1", "<FILENAME>": "a4.xml", "<DESCRIPTION>": "4", "<TEXT>": {"<XML>": "xml test"}}, {"<TYPE>": "EX-24", "<SEQUENCE>": "2", "<FILENAME>": "ex-24.htm", "<DESCRIPTION>": "EX-24", "<XML>": "", "<TEXT>": "html test"}]}}'
+
+# TODO
+# def test_sgml_exception():
+# 	try:
+# 		# malformed sgml
+# 		text = '<SEC-DOCUMENT>00011046500110n<DOCUMENT>\n<TYPE>4\n<SEQUENCE>1\n<FILENAME>a4.xml\n<DESCRIPTION>4\n<TEXT>\n<XML>\nxml test\n</XML>\n</TEXT>\n</DOCUMENT>\n<DOCUMENT>\n<TYPE>EX-24\n<SEQUENCE>2\n<FILENAME>ex-24.htm\n<'
+# 		sgml = Sgml(text, DTD())
+# 		assert False
+# 	except SgmlException:
+# 	    assert True
