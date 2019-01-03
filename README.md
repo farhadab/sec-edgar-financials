@@ -11,13 +11,13 @@ While it is essentially a web-scraper, the EDGAR filing structure that it is bui
 
 The below example shows a basic usage of this package.
 ```python
-from edgar.filings.stock import Stock
+from edgar.stock import Stock
 
 period = 'quarterly' # or 'annual', which is the default for Stock()
 # e.g. the next line will give you just the latest annual results
 # stock = Stock('AAPL')
-year = 2016
-quarter = 1 # 1, 2, 3, or 4
+year = 2016 # can use default of 0 to get the latest
+quarter = 1 # 1, 2, 3, 4, or default value of 0 to get the latest
 stock = Stock(symbol='AAPL', period=period, year=year, quarter=quarter)
 stock.get_statements_of_income()
 stock.get_balance_sheets()

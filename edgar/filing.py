@@ -16,11 +16,19 @@ class Statements:
 	# used in parsing financial data; these are the statements we'll be parsing
 	statements_of_income = ['consolidated statements of income',
 					'consolidated statements of operations',
+					'consolidated statement of earnings',
 					'condensed consolidated statements of income (unaudited)',
 					'condensed consolidated statements of income',
-					'condensed consolidated statements of operations'
+					'condensed consolidated statements of operations (unaudited)',
+					'condensed consolidated statements of operations',
+					'condensed consolidated statement of earnings (unaudited)',
+					'condensed consolidated statement of earnings',
 					]
 	balance_sheets = ['consolidated balance sheets',
+					'consolidated statement of financial position',
+					'condensed consolidated statement of financial position (current period unaudited)',
+					'condensed consolidated statement of financial position (unaudited)',
+					'condensed consolidated statement of financial position',
 					'condensed consolidated balance sheets (current period unaudited)',
 					'condensed consolidated balance sheets (unaudited)',
 					'condensed consolidated balance sheets',

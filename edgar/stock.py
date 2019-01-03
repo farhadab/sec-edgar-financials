@@ -6,7 +6,7 @@ from edgar.edgar import get_financial_filing_info, SYMBOLS_DATA_PATH
 from edgar.filing import Filing
 
 class Stock:
-	def __init__(self, symbol, period='annual', year='', quarter=0):
+	def __init__(self, symbol, period='annual', year=0, quarter=0):
 		self.symbol = symbol
 		self.cik = self._find_cik()
 		self.period = period
@@ -23,7 +23,7 @@ class Stock:
 			raise IndexError('could not find cik, must add to symbols.csv') from None
 
 
-	def _get_filing(self, period, year='', quarter=0):
+	def _get_filing(self, period, year=0, quarter=0):
 		filing_info_list = get_financial_filing_info(period=period, cik=self.cik, year=year, quarter=quarter)
 
 		if len(filing_info_list) == 0:

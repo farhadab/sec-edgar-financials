@@ -110,7 +110,28 @@ def get_index_json(year='', quarter=''):
 
 
 
+def _get_latest_quarter_dir(year_str):
+	'''
+	Given a year dir (e.g. '2018/'), traverse the items in index.json to find
+	the latest quarter
+	'''
+	index_json = get_index_json(year=year_str)
+	items = index_json['directory']['item']
+
+	# item list is in order, with the latest at the end
+	for i in reversed(range(len(items))):
+		item = items[i]
+
+		if item['type'] == 'dir':
+			return item['href']
+
+
+
 def get_filing_info(cik='', forms=[], year=0, quarter=0):
+	'''
+	Public wrapper to get FilingInfo for a given company, type of form, and 
+	period
+	'''
 	current_year = datetime.now().year
 
 	if year!=0 and ((len(str(year)) != 4) or year < EDGAR_MIN_YEAR or year > current_year):
@@ -118,7 +139,14 @@ def get_filing_info(cik='', forms=[], year=0, quarter=0):
 	if quarter not in [0, 1, 2, 3, 4]:
 		raise InvalidInputException('Quarter must be 1, 2, 3, or 4. 0 indicates default (latest)')
 
-	return _get_filing_info(cik=cik, forms=forms, year=('' if year==0 else str(year)+'/'), quarter=('' if quarter==0 else 'QTR{}/'.format(quarter)))
+	year_str = '' if year==0 else str(year)+'/'
+	quarter_str = '' if quarter==0 else 'QTR{}/'.format(quarter)
+
+	if quarter == 0 and year != 0:
+		# we just want the latest available
+		quarter_str = _get_latest_quarter_dir(year_str)
+
+	return _get_filing_info(cik=cik, forms=forms, year=year_str, quarter=quarter_str)
 
 
 def _get_filing_info(cik='', forms=[], year='', quarter=''):

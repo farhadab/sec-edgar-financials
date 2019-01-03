@@ -220,7 +220,10 @@ def _get_statement_meta_data(rows):
 					# e.g. CONSOLIDATED STATEMENTS OF INCOME - USD ($)
 					title = info_text.replace(unit_text, '').strip()
 
-					if 'balance' in title.lower():
+					# Not yet using Statements.balance_sheets from filing.py because not sure
+					# if we can assume that the FilingSummary names will be consistent with the 
+					# title
+					if 'balance' in title.lower() or 'statement of financial position' in title.lower():
 						is_snapshot = True
 
 				elif 'th' in class_list:
