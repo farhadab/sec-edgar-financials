@@ -310,6 +310,6 @@ def _process_financial_value(text, xbrl_element, unit_text):
 			value = value * 1000
 
 	except ValueError:
-		print(amount_text+' is not numeric')
+		print('Warning: {} (from {}) is not numeric even after removing special characters () - ignoring'.format(text, xbrl_element, amount_text))
 
 	return value

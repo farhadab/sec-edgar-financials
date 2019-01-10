@@ -110,11 +110,13 @@ def get_index_json(year='', quarter=''):
 
 
 
-def _get_latest_quarter_dir(year_str):
+def get_latest_quarter_dir(year):
 	'''
-	Given a year dir (e.g. '2018/'), traverse the items in index.json to find
-	the latest quarter
+	Given a year (e.g. 2018), traverse the items in index.json to find
+	the latest quarter, returning the number (e.g. 1, 2, 3, 4) and the
+	reference in the system (e.g. 'QTR4/')
 	'''
+	year_str = str(year)+'/'
 	index_json = get_index_json(year=year_str)
 	items = index_json['directory']['item']
 
@@ -123,8 +125,22 @@ def _get_latest_quarter_dir(year_str):
 		item = items[i]
 
 		if item['type'] == 'dir':
-			return item['href']
+			# return the 
+			return int(item['name'].replace('QTR','')), item['href']
 
+
+
+def find_latest_filing_info_going_back_from(period, cik, year, quarter):
+	'''
+	Returns the latest filing info list in the given year, going backwards from
+	the given year and quarter
+	'''
+	filing_info_list = []
+	while quarter > 0 and len(filing_info_list) == 0:
+		filing_info_list = get_financial_filing_info(period=period, cik=cik, year=year, quarter=quarter)
+		quarter -= 1
+
+	return filing_info_list
 
 
 def get_filing_info(cik='', forms=[], year=0, quarter=0):
@@ -144,7 +160,7 @@ def get_filing_info(cik='', forms=[], year=0, quarter=0):
 
 	if quarter == 0 and year != 0:
 		# we just want the latest available
-		quarter_str = _get_latest_quarter_dir(year_str)
+		quarter_str = get_latest_quarter_dir(year)[1]
 
 	return _get_filing_info(cik=cik, forms=forms, year=year_str, quarter=quarter_str)
 
@@ -164,7 +180,7 @@ def _get_filing_info(cik='', forms=[], year='', quarter=''):
 			raise InvalidInputException('{} is not a supported form'.format(form))
 
 	url = '{}{}{}{}'.format(FULL_INDEX_URL, year, quarter, COMPANY_IDX)
-	print('getting filing info from '+url)
+	print('getting {} filing info from {}'.format(forms, url))
 
 	response = GetRequest(url).response
 	text = response.text

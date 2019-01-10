@@ -18,6 +18,7 @@ period = 'quarterly' # or 'annual', which is the default for Stock()
 # stock = Stock('AAPL')
 year = 2016 # can use default of 0 to get the latest
 quarter = 1 # 1, 2, 3, 4, or default value of 0 to get the latest
+# using defaults to get the latest annual, can simplify to just Stock('AAPL')
 stock = Stock(symbol='AAPL', period=period, year=year, quarter=quarter)
 stock.get_statements_of_income()
 stock.get_balance_sheets()
@@ -66,3 +67,5 @@ It should have most companies that have filed on or before November 2018. When t
 ## Roadmap
  * Allow statements to be gathered over a period of time (so not just for a given year+quarter)
  * Clean up logging + error handling
+ * Utilities:
+   * Number of shares over time

@@ -13,7 +13,8 @@ class Document:
 		try:
 			self.description = data[self.dtd.description.tag]
 		except KeyError as e:
-			print('No description')
+			# print('Warning: No {} tag'.format(self.dtd.description.tag))
+			pass
 		self.doc_text = DocumentText(data[self.dtd.doc_text.tag])
 
 
