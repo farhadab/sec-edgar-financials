@@ -69,7 +69,7 @@ def get_all_symbols():
 							
 						print('year {0} quarter {1}'.format(year, quarter))
 						
-						filing_headers, filings = _get_filing_info(forms=forms, year=year, quarter=quarter)
+						filings = _get_filing_info(forms=forms, year=year, quarter=quarter)
 						
 						for filing in filings:
 							filing_url = filing.url

@@ -49,7 +49,7 @@ INDEX_JSON = 'index.json'
 # company.idx gives us a list of all companies that filed in the period
 COMPANY_IDX = 'company.idx' # sorted by company name
 FORM_IDX = 'form.idx' # sorted by form type
-#MASTER_IDX = 'master.idx' # sorted by cik
+MASTER_IDX = 'master.idx' # sorted by cik
 #CRAWLER_IDX = 'crawler.idx'
 #XBRL_IDX = 'xbrl.idx'
 
@@ -167,81 +167,96 @@ def get_filing_info(cik='', forms=[], year=0, quarter=0):
 
 def _get_filing_info(cik='', forms=[], year='', quarter=''):
 	'''
-	Return a tuple of (filing_info_headers, filing_info); filing_info is a List of FilingInfo
+	Return a List of FilingInfo
 		If forms are specified, only filings with the given value will be returned
 		e.g. 10-K, 10-Q, 3, 4, 5
 		year and quarter are defaulted to '', but can be replaced with an item.href
 		from index.json
 	'''
-	# can use form.idx to order by form type, but headers are in different order
-	# so would need to change code for this
+	def _add_filing_info_from_master_idx_data(filing_infos, data, forms):
+		'''
+		returns a FilingInfo object given data from a row in master.idx.
+		Format of master.idx file is as follows:
+
+		CIK|Company Name|Form Type|Date Filed|Filename
+		--------------------------------------------------------------------------------
+		1000209|MEDALLION FINANCIAL CORP|8-K|2019-01-08|edgar/data/1000209/0001193125-19-004285.txt
+		1000209|MEDALLION FINANCIAL CORP|8-K|2019-01-11|edgar/data/1000209/0001193125-19-007413.txt
+		1000228|HENRY SCHEIN INC|425|2019-01-07|edgar/data/1000228/0001193125-19-003023.txt
+		'''
+		if forms == [] or data[2] in forms:
+			# Form Type should among forms or forms be default (all)
+			filing_infos.append(FilingInfo(
+						data[1], # Company Name
+						data[2], # Form Type
+						data[0], # CIK
+						data[3], # Date Filed
+						data[4].strip() # File Name
+					))
+
 	for form in forms:
 		if form not in SUPPORTED_FORMS:
 			raise InvalidInputException('{} is not a supported form'.format(form))
 
-	url = '{}{}{}{}'.format(FULL_INDEX_URL, year, quarter, COMPANY_IDX)
+	# using master.idx so it's sorted by cik and we can use binary search
+	url = '{}{}{}{}'.format(FULL_INDEX_URL, year, quarter, MASTER_IDX)
 	print('getting {} filing info from {}'.format(forms, url))
 
 	response = GetRequest(url).response
 	text = response.text
 	# print(text)
+	rows = text.split('\n')
+	data_rows = rows[11:]
 
-	# we just want the filing info data, which starts after the "Company Name"
-	# header and ends at the File Name (for company.idx)
-	header_start_index = text.find('\nCompany Name')
-	header_end_index = text.find('File Name', header_start_index)+len('File Name')
-	header_text = text[header_start_index:header_end_index].replace('\n', '')
+	filing_infos = []
 
-	filing_info_text = text[text.index(header_text):]
-	# this also gives us the starting index for the data, e.g.:
-	'''
-	Company Name                                                  Form Type   CIK         Date Filed  File Name
-	---------------------------------------------------------------------------------------------------------------------------------------------
-	01VC Fund II, L.P.                                            D           1746009     2018-07-20  edgar/data/1746009/0001213900-18-009448.txt         
-	1 800 FLOWERS COM INC                                         3           1084869     2018-07-13  edgar/data/1084869/0001084869-18-000016.txt         
-	1 800 FLOWERS COM INC                                         4           1084869     2018-07-03  edgar/data/1084869/0001084869-18-000015.txt  
-	'''
+	if cik != '':
+		# binary search to get company's filing info
+		start = 0
+		end = len(data_rows)
 
-	# split filing_info_text into rows
-	filing_info_text_list = filing_info_text.split('\n')
+		while start < end:
+			mid = (start+end)//2
+			data = data_rows[mid].split('|')
 
-	# split filing_list into usable data
-	company_index = header_text.index('Company Name')
-	form_index = header_text.index('Form Type')
-	cik_index = header_text.index('CIK')
-	date_index = header_text.index('Date Filed')
-	file_index = header_text.index('File Name')
+			# comparisons are done as strings, same as ordering in master.idx
+			# e.g. 11 > 100
+			if data[0] == cik:
+				# matched cik
+				_add_filing_info_from_master_idx_data(filing_infos, data, forms)
 
-	filing_info_raw = [
-						FilingInfo(
-						row[company_index:form_index].strip(), # Company Name
-						row[form_index:cik_index].strip(), # Form Type
-						row[cik_index:date_index].strip(), # CIK
-						row[date_index:file_index].strip(), # Date Filed
-						row[file_index:len(row)].strip() # File Name
-						)
-						 for index, row in enumerate(filing_info_text_list) 
-						 	if row.strip() != '' and
-						 	(index == 0 or (
-						 		index != 1 and # ignore separator row
-								# Form Type should among forms or forms be default (all)
-								(row[form_index:cik_index].strip() in forms or forms == [])
-								# CIK should match cik or be default
-								and (row[cik_index:date_index].strip() == cik or cik == '')
-							))
-					]
+				# get all before and after (there can be multiple)
 
-	# initialize empty in case no matches for forms
-	filing_info_headers = []
-	filing_info = []
+				# go backwards to get those before
+				index = mid - 1
+				data = data_rows[index].split('|')
+				while data[0] == cik and index >= 0:
+					_add_filing_info_from_master_idx_data(filing_infos, data, forms)
+					index -= 1
+					data = data_rows[index].split('|')
 
-	if len(filing_info_raw) > 0:
-		# header is the first row (same as header_text)
-		filing_info_headers = filing_info_raw[0]
-		# data is from the 2nd row (after hearder) onwards
-		filing_info = list(filter(None, filing_info_raw))[1:]
+				# after
+				index = mid + 1
+				data = data_rows[index].split('|')
+				while data[0] == cik and index < len(data_rows):
+					_add_filing_info_from_master_idx_data(filing_infos, data, forms)
+					index += 1
+					data = data_rows[index].split('|')
 
-	return filing_info_headers, filing_info
+				break
+
+			elif data[0] < cik:
+				start = mid + 1
+			else:
+				end = mid - 1
+	else:
+		# go through all
+		for row in data_rows:
+			data = row.split('|')
+			_add_filing_info_from_master_idx_data(filing_infos, data, forms)
+
+
+	return filing_infos
 
 
 
@@ -250,7 +265,7 @@ def get_financial_filing_info(period, cik, year='', quarter=''):
 		raise KeyError('period must be either "annual" or "quarterly"')
 
 	forms = FINANCIAL_FORM_MAP[period]
-	return get_filing_info(cik=cik, forms=forms, year=year, quarter=quarter)[1]
+	return get_filing_info(cik=cik, forms=forms, year=year, quarter=quarter)
 
 
 

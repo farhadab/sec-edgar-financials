@@ -9,7 +9,7 @@ def setup_module(module):
 ############## Positive Testing ##############
 
 def test_get_filing_info():
-	filing_headers, filing_infos = get_filing_info(year=2018, quarter=4)
+	filing_infos = get_filing_info(year=2018, quarter=4)
 	# print(filing_infos)
 	assert filing_infos is not None
 	assert type(filing_infos) is list
@@ -58,7 +58,7 @@ def validate_url(filing_info):
 
 def test_get_filing_info_forms_filter():
 	forms = ['4', '10-Q']
-	filing_headers, filing_infos = get_filing_info(forms=forms, year=2018, quarter=4)
+	filing_infos = get_filing_info(forms=forms, year=2018, quarter=4)
 	assert filing_infos is not None
 	assert type(filing_infos) is list
 
@@ -69,7 +69,7 @@ def test_get_filing_info_forms_filter():
 
 def test_get_filing_info_cik_filter():
 	cik = '1698878'
-	filing_headers, filing_infos = get_filing_info(cik=cik, year=2018, quarter=4)
+	filing_infos = get_filing_info(cik=cik, year=2018, quarter=4)
 	assert filing_infos is not None
 	assert type(filing_infos) is list
 
