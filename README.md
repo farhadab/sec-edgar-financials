@@ -20,12 +20,14 @@ year = 2016 # can use default of 0 to get the latest
 quarter = 1 # 1, 2, 3, 4, or default value of 0 to get the latest
 # using defaults to get the latest annual, can simplify to just Stock('AAPL')
 stock = Stock(symbol='AAPL', period=period, year=year, quarter=quarter)
-stock.get_income_statements()
-stock.get_balance_sheets()
-stock.get_cash_flows()
+
+# financial reports (contain data for multiple years)
+income_statements = stock.get_income_statements()
+balance_sheets = stock.get_balance_sheets()
+cash_flows = stock.get_cash_flows()
 ```
 
-An example of the output for the income statements is shown below.
+The structure of the resulting `FinancialReport`s are shown below, using the `income_statements` as an example.
 ```json
 {
 	"company": "AAPL",
