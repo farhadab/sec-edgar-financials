@@ -14,7 +14,7 @@ FILING_SUMMARY_FILE = 'FilingSummary.xml'
 
 class Statements:
 	# used in parsing financial data; these are the statements we'll be parsing
-	statements_of_income = ['consolidated statements of income',
+	income_statements = ['consolidated statements of income',
 					'consolidated statements of operations',
 					'consolidated statement of earnings',
 					'condensed consolidated statements of income (unaudited)',
@@ -38,7 +38,7 @@ class Statements:
 					'condensed consolidated statements of cash flows'
 					]
 
-	all_statements = statements_of_income + balance_sheets + cash_flows
+	all_statements = income_statements + balance_sheets + cash_flows
 
 
 
@@ -157,8 +157,8 @@ class Filing:
 
 
 
-	def get_statements_of_income(self):
-		return self._get_financial_data(self.STATEMENTS.statements_of_income, False)
+	def get_income_statements(self):
+		return self._get_financial_data(self.STATEMENTS.income_statements, False)
 
 	def get_balance_sheets(self):
 		return self._get_financial_data(self.STATEMENTS.balance_sheets, False)

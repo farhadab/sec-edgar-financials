@@ -56,8 +56,8 @@ class Stock:
 
 
 
-	def get_statements_of_income(self):
-		return self.filing.get_statements_of_income()
+	def get_income_statements(self):
+		return self.filing.get_income_statements()
 
 	def get_balance_sheets(self):
 		return self.filing.get_balance_sheets()

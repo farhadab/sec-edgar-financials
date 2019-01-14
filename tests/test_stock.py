@@ -13,7 +13,7 @@ def setup_module(module):
 ###############################################################################
 # just noting interesting cases here so i know to account for them
 
-def test_get_statements_of_income():
+def test_get_income_statements():
 
 	period = 'quarterly' # or 'annual', which is the default for Stock()
 	# e.g. the next line will give you just the latest annual results
@@ -21,7 +21,7 @@ def test_get_statements_of_income():
 	year = 2016
 	quarter = 1 # 1, 2, 3, or 4
 	stock = Stock(symbol='AAPL', period=period, year=year, quarter=quarter)
-	result = stock.get_statements_of_income()
+	result = stock.get_income_statements()
 	print(FinancialReportEncoder().encode(result)) # for easy QA using JSON
 	# mock up info
 	assert 1 == 1
@@ -34,7 +34,7 @@ def test_get_statement_of_earnings():
 	year = 2018
 	quarter = 1 # 1, 2, 3, or 4
 	stock = Stock(symbol='IBM', period=period, year=year, quarter=quarter)
-	result = stock.get_statements_of_income()
+	result = stock.get_income_statements()
 	print(FinancialReportEncoder().encode(result)) # for easy QA using JSON
 	# mock up info
 	assert 1 == 1

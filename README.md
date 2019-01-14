@@ -20,7 +20,7 @@ year = 2016 # can use default of 0 to get the latest
 quarter = 1 # 1, 2, 3, 4, or default value of 0 to get the latest
 # using defaults to get the latest annual, can simplify to just Stock('AAPL')
 stock = Stock(symbol='AAPL', period=period, year=year, quarter=quarter)
-stock.get_statements_of_income()
+stock.get_income_statements()
 stock.get_balance_sheets()
 stock.get_cash_flows()
 ```
