@@ -25,7 +25,7 @@ stock.get_balance_sheets()
 stock.get_cash_flows()
 ```
 
-An example of the output for the statements of income is shown below.
+An example of the output for the income statements is shown below.
 ```json
 {
 	"company": "AAPL",
