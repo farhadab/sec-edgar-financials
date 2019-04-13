@@ -7,8 +7,14 @@ The purpose of this project is to allow users to conveniently extract financial 
 While it is essentially a web-scraper, the EDGAR filing structure that it is built on, and the formatting of the filings themselves, should remain rather static.
 
 
-## Example Usage
+## Installation
+Will eventually upload to PyPI, but for now:
+1. clone/download
+2. `python setup.py sdist` to create distribution package (note: you must have `setuptools` installed)
+3. `pip install ./dist/sec-edgar-financials-0.0.1.tar.gz`
 
+
+## Example Usage
 The below example shows a basic usage of this package.
 ```python
 from edgar.stock import Stock
@@ -50,6 +56,7 @@ The structure of the resulting `FinancialReport`s are shown below, using the `in
  * Note that the above is in JSON format just for the purposes of easy communication and that the actual output of the call is a `FinancialReport` Object from the `edgar.financials` module. To get the JSON, you can use `FinancialReportEncoder` from `edgar.financials`, e.g. `FinancialReportEncoder().encode(financial_report)`.
  * As we can see above, a given `FinancialReport` will actually contain `reports` for multiple periods/dates. The `map` in each one of these reports contains XBRL elements (e.g. "SalesRevenueNet"), with their namespace found as a prefix (e.g. "us-gaap"). More information on XBRL can be found at https://xbrl.us/data-rule/dqc_0015-le/.
 
+
 ## Terminology
 US companies are required by law to file forms with the SEC and these submissions are stored in the EDGAR file system (database), which is organized by year and then by quarter. Below is the terminology we use to navigate the data available to us in this database.
 
@@ -65,6 +72,7 @@ US companies are required by law to file forms with the SEC and these submission
 EDGAR doesn't categorize using stock symbols, since not all companies are publicly traded, but rather by a cik value. To help reconcile the issue of mapping a stock symbol (easy for users) to a cik, created the cik-to-symbol database, `edgar.data.symbols.csv`, using `edgar.data.symbols.py`.
 
 It should have most companies that have filed on or before November 2018. When the python file runs, it will append to what's already in place in the csv (this means new companies will have to be manually added). At this point, however, it's recommended to manually add to this file as needed as 1) it's a very resource intensive process and 2) they way it's currently coded just continues backwards from the last entry (i.e. wouldn't capture new cik/symbol combos that come along).
+
 
 ## Roadmap
  * Allow statements to be gathered over a period of time (so not just for a given year+quarter)

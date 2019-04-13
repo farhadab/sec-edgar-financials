@@ -1,0 +1,8 @@
+__title__ = 'sec-edgar-financials'
+__description__ = 'Extract financial data from the SEC EDGAR database'
+__url__ = 'https://github.com/farhadab/sec-edgar-financials'
+__version__ = '0.0.1'
+__author__ = 'Farhad Abdolhosseini'
+__author_email__ = 'farhadab15@gmail.com'
+__license__ = 'MIT'
+# __copyright__ = 'Copyright 2019 Farhad Abdolhosseini'
