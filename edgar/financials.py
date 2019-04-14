@@ -31,6 +31,11 @@ class FinancialInfo:
 	financial elements are stored in a map to retain flexibility
 	'''
 	def __init__(self, date, months, map):
+		'''
+		:param date: date of the information
+		:param months: number of months that it covers (None if balance sheet)
+		:param map: map of XBRL element name to value
+		'''
 		self.date = date
 		self.months = months
 		self.map = map
@@ -46,6 +51,11 @@ class FinancialReport:
 	financial elements are stored in a map to retain flexibility
 	'''
 	def __init__(self, company, reports=[]):
+		'''
+		:param company: identifier for a company (not using the term "symbol"
+			because not all companies that file on edgar are publicly traded)
+		:param reports: list of FinancialInfo objects
+		'''
 		self.company = company
 		self.reports = reports
 
@@ -98,20 +108,30 @@ The next part differs based on 10-K and 10-Q
         Consolidated Statements Of Operations - USD ($)<br> shares in Millions,
         $ in Millions
 '''
-MAX_META_DATA_ROWS = 2
 
 
 
 def get_financial_report(company, financial_html_text):
-	financial_info = process_financial_info(financial_html_text)
+	'''
+	Returns a FinancialReport from html-structured financial data
+	
+	:param company: identifier of the company that the financial_html_text
+		belongs to (can be the company's stock symbol, for example)
+	:param financial_html_text: html-structured financial data from an annual
+		or quarterly Edgar filing
+	'''
+	financial_info = _process_financial_info(financial_html_text)
 	financial_report = FinancialReport(company, financial_info)
 	return financial_report
 
 
 
-def process_financial_info(financial_html_text):
+def _process_financial_info(financial_html_text):
 	'''
-	Return [...] from the html text containing the financial data
+	Return a list of FinancialInfo objects from html-structured financial data
+	
+	:param financial_html_text: html-structured financial data from an annual
+		or quarterly Edgar filing
 	'''
 	source_soup = BeautifulSoup(financial_html_text, 'html.parser')
 	report = source_soup.find('table', {'class':'report'})
@@ -187,6 +207,16 @@ def process_financial_info(financial_html_text):
 
 
 def _get_statement_meta_data(rows):
+	'''
+	Returns the dates, period_units, unit_text given the html table rows of a
+	financial statement filing
+
+	:return: tuple of:
+		dates - list of the different dates of the filing,
+		period_units - list of the period (in months) that each date covers,
+		unit_text - text that tells us the unit of shares and dollars being
+			used in the filing
+	'''
 	dates = []
 	period_units = []
 	unit_text = None
@@ -194,8 +224,8 @@ def _get_statement_meta_data(rows):
 
 	title_repeat = 0
 
-	# we only use as many rows as needed to gather meta data
-	for row_num, row in enumerate(rows[:MAX_META_DATA_ROWS]):
+	# all the meta data we need is in the first two tables rows
+	for row_num, row in enumerate(rows[:2]):
 		# meta data comes from the table headers
 		data = row.find_all('th')
 
@@ -260,7 +290,11 @@ def _get_statement_meta_data(rows):
 
 
 def _process_period(info_text):
-	# assumes it's months
+	'''
+	Returns the number of months given a financial reporting period
+	
+	:param info_text: a reporting period, e.g. "12 Months Ended"
+	'''
 	return int(re.sub('[^0-9]', '', info_text))
 
 
@@ -269,7 +303,12 @@ def _process_xbrl_element(info):
 	'''
 	Returns the name of the XBRL element in info (html BeautifulSoup).
 	Leaving "us-gaap_" prefix in so it's contains both the namespace
-	and elementName of the XBRL (in case it's not always us-gaap) 
+	and elementName of the XBRL (in case it's not always us-gaap)
+
+	:param info: must be an html element with an anchor child that has an
+		onclick attribute of the form: 
+		onclick="top.Show.showAR( this, 'defref_<xbrl_name>', window );"
+	:return: <xbrl_name>
 	'''
 	# us-gaap namespace element is in the onclick of the anchor tag
 	anchor = info.find('a')
@@ -286,6 +325,13 @@ def _process_xbrl_element(info):
 def _process_financial_value(text, xbrl_element, unit_text):
 	'''
 	Returns float representation of text after stripping special characters
+
+	:param text: the monetary value, which if in brackets, is negative
+	:param xbrl_element: text of html element that contains xbrl info
+		for the value of the text (i.e. the context)
+	:param unit_text: text of the form "x in y" where
+		x is either "shares" or "$"
+		y is either "thousands", "millions", or "billions"
 	'''
 	is_negative = True if '(' in text else False
 	# strip special characters
