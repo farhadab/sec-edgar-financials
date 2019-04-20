@@ -173,9 +173,10 @@ def _get_filing_info(cik='', forms=[], year='', quarter=''):
         year and quarter are defaulted to '', but can be replaced with an item.href
         from index.json
     '''
-    def _add_filing_info_from_master_idx_data(filing_infos, data, forms):
+    def _get_raw_data(row):
         '''
-        returns a FilingInfo object given data from a row in master.idx.
+        Returns a list from a string (master idx row) that is delimited by "|"
+
         Format of master.idx file is as follows:
 
         CIK|Company Name|Form Type|Date Filed|Filename
@@ -184,7 +185,16 @@ def _get_filing_info(cik='', forms=[], year='', quarter=''):
         1000209|MEDALLION FINANCIAL CORP|8-K|2019-01-11|edgar/data/1000209/0001193125-19-007413.txt
         1000228|HENRY SCHEIN INC|425|2019-01-07|edgar/data/1000228/0001193125-19-003023.txt
         '''
-        if forms == [] or data[2] in forms:
+        return row.split('|')
+
+    def _add_filing_info(filing_infos, data, forms):
+        '''
+        Adds a FilingInfo from data to a list
+
+        :param data: list of length 5 with the following data indices:
+            0=cik, 1=company, 2=form, 3=date_filed, 4=file_name 
+        '''
+        if len(data) == 5 and (forms == [] or data[2] in forms):
             # Form Type should among forms or forms be default (all)
             filing_infos.append(FilingInfo(
                         data[1], # Company Name
@@ -217,31 +227,30 @@ def _get_filing_info(cik='', forms=[], year='', quarter=''):
 
         while start < end:
             mid = (start+end)//2
-            data = data_rows[mid].split('|')
+            data = _get_raw_data(data_rows[mid])
 
             # comparisons are done as strings, same as ordering in master.idx
             # e.g. 11 > 100
             if data[0] == cik:
                 # matched cik
-                _add_filing_info_from_master_idx_data(filing_infos, data, forms)
+                _add_filing_info(filing_infos, data, forms)
 
                 # get all before and after (there can be multiple)
-
                 # go backwards to get those before
                 index = mid - 1
-                data = data_rows[index].split('|')
+                data = _get_raw_data(data_rows[index])
                 while data[0] == cik and index >= 0:
-                    _add_filing_info_from_master_idx_data(filing_infos, data, forms)
+                    _add_filing_info(filing_infos, data, forms)
                     index -= 1
-                    data = data_rows[index].split('|')
+                    data = _get_raw_data(data_rows[index])
 
                 # after
                 index = mid + 1
-                data = data_rows[index].split('|')
+                data = _get_raw_data(data_rows[index])
                 while data[0] == cik and index < len(data_rows):
-                    _add_filing_info_from_master_idx_data(filing_infos, data, forms)
+                    _add_filing_info(filing_infos, data, forms)
                     index += 1
-                    data = data_rows[index].split('|')
+                    data = _get_raw_data(data_rows[index])
 
                 break
 
@@ -252,8 +261,8 @@ def _get_filing_info(cik='', forms=[], year='', quarter=''):
     else:
         # go through all
         for row in data_rows:
-            data = row.split('|')
-            _add_filing_info_from_master_idx_data(filing_infos, data, forms)
+            data = _get_raw_data(row)
+            _add_filing_info(filing_infos, data, forms)
 
 
     return filing_infos
