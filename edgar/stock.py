@@ -7,11 +7,9 @@ from edgar.filing import Filing
 from datetime import datetime
 
 class Stock:
-    def __init__(self, symbol, period='annual', year=0, quarter=0):
+    def __init__(self, symbol):
         self.symbol = symbol
         self.cik = self._find_cik()
-        self.period = period
-        self.filing = self._get_filing(year, quarter)
 
 
     def _find_cik(self):
@@ -24,24 +22,32 @@ class Stock:
             raise IndexError('could not find cik, must add to symbols.csv') from None
 
 
-    def _get_filing(self, year=0, quarter=0):
-        filing_info_list = get_financial_filing_info(period=self.period, cik=self.cik, year=year, quarter=quarter)
+    def get_filing(self, period='annual', year=0, quarter=0):
+        '''
+        Returns the Filing closest to the given period, year, and quarter.
+        Raises NoFilingInfoException if nothing is found for the params.
+
+        :param period: either "annual" (default) or "quarterly"
+        :param year: year to search, if 0, will default latest
+        :param quarter: 1, 2, 3, 4, or default value of 0 to get the latest
+        '''
+        filing_info_list = get_financial_filing_info(period=period, cik=self.cik, year=year, quarter=quarter)
 
         if len(filing_info_list) == 0:
             # get the latest
             current_year = datetime.now().year if year == 0 else year
             current_quarter = quarter if quarter > 0 else get_latest_quarter_dir(current_year)[0]
-            print('No {} filing info found for year={} quarter={}. Finding latest.'.format(self.period, current_year, current_quarter))
+            print('No {} filing info found for year={} quarter={}. Finding latest.'.format(period, current_year, current_quarter))
 
             # go back through the quarters to find the latest
-            filing_info_list = find_latest_filing_info_going_back_from(self.period, self.cik, current_year, current_quarter)
+            filing_info_list = find_latest_filing_info_going_back_from(period, self.cik, current_year, current_quarter)
 
             if len(filing_info_list) == 0:
                 # we still have nothing, one last try with the previous year
                 # this is useful when you're checking for data early on in a
                 # calendar year, since it takes time for the filings to come in
                 print('Will do a final attempt to find filing info from last year')
-                filing_info_list = find_latest_filing_info_going_back_from(self.period, self.cik, current_year - 1, 4)
+                filing_info_list = find_latest_filing_info_going_back_from(period, self.cik, current_year - 1, 4)
 
             if len(filing_info_list) == 0:
                 # still not successful, throw hands up and quit
@@ -53,17 +59,6 @@ class Stock:
         filing = Filing(company=self.symbol, url=url)
 
         return filing
-
-
-
-    def get_income_statements(self):
-        return self.filing.get_income_statements()
-
-    def get_balance_sheets(self):
-        return self.filing.get_balance_sheets()
-
-    def get_cash_flows(self):
-        return self.filing.get_cash_flows()
 
 
 

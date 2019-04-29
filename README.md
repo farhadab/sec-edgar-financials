@@ -19,18 +19,19 @@ The below example shows a basic usage of this package.
 ```python
 from edgar.stock import Stock
 
+stock = Stock('AAPL')
 period = 'quarterly' # or 'annual', which is the default for Stock()
 # e.g. the next line will give you just the latest annual results
 # stock = Stock('AAPL')
 year = 2016 # can use default of 0 to get the latest
 quarter = 1 # 1, 2, 3, 4, or default value of 0 to get the latest
 # using defaults to get the latest annual, can simplify to just Stock('AAPL')
-stock = Stock(symbol='AAPL', period=period, year=year, quarter=quarter)
+filing = stock.get_filing(period, year, quarter)
 
 # financial reports (contain data for multiple years)
-income_statements = stock.get_income_statements()
-balance_sheets = stock.get_balance_sheets()
-cash_flows = stock.get_cash_flows()
+income_statements = filing.get_income_statements()
+balance_sheets = filing.get_balance_sheets()
+cash_flows = filing.get_cash_flows()
 ```
 
 The structure of the resulting `FinancialReport`s are shown below, using the `income_statements` as an example.
