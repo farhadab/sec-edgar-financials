@@ -21,11 +21,9 @@ from edgar.stock import Stock
 
 stock = Stock('AAPL')
 period = 'quarterly' # or 'annual', which is the default for Stock()
-# e.g. the next line will give you just the latest annual results
-# stock = Stock('AAPL')
 year = 2016 # can use default of 0 to get the latest
 quarter = 1 # 1, 2, 3, 4, or default value of 0 to get the latest
-# using defaults to get the latest annual, can simplify to just Stock('AAPL')
+# using defaults to get the latest annual, can simplify to stock.get_filing()
 filing = stock.get_filing(period, year, quarter)
 
 # financial reports (contain data for multiple years)
