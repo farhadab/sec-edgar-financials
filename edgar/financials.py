@@ -4,10 +4,13 @@ Handles financial logic
 import re
 from bs4 import BeautifulSoup
 from json import JSONEncoder
+from datetime import datetime
 
 class FinancialReportEncoder(JSONEncoder):
         
     def default(self, o):
+        if isinstance(o, datetime):
+            return o.isoformat()
         return o.__dict__
 
 
@@ -50,13 +53,14 @@ class FinancialReport:
     Models financial reports from an edgar filing
     financial elements are stored in a map to retain flexibility
     '''
-    def __init__(self, company, reports=[]):
+    def __init__(self, company, date_filed, reports=[]):
         '''
         :param company: identifier for a company (not using the term "symbol"
             because not all companies that file on edgar are publicly traded)
         :param reports: list of FinancialInfo objects
         '''
         self.company = company
+        self.date_filed = date_filed
         self.reports = reports
 
     def add_financial_info(self, financial_info: FinancialInfo):
@@ -111,17 +115,18 @@ The next part differs based on 10-K and 10-Q
 
 
 
-def get_financial_report(company, financial_html_text):
+def get_financial_report(company, date_filed, financial_html_text):
     '''
     Returns a FinancialReport from html-structured financial data
     
     :param company: identifier of the company that the financial_html_text
         belongs to (can be the company's stock symbol, for example)
+    :param date_filed: datetime representing ACCEPTANCE-DATETIME of Filing
     :param financial_html_text: html-structured financial data from an annual
         or quarterly Edgar filing
     '''
     financial_info = _process_financial_info(financial_html_text)
-    financial_report = FinancialReport(company, financial_info)
+    financial_report = FinancialReport(company, date_filed, financial_info)
     return financial_report
 
 
@@ -142,7 +147,8 @@ def _process_financial_info(financial_html_text):
     dates, period_units, unit_text = _get_statement_meta_data(rows)
 
     for i, date in enumerate(dates):
-        financial_info.append(FinancialInfo(date, period_units[i], {}))
+        dt = datetime.strptime(date, '%b. %d, %Y')
+        financial_info.append(FinancialInfo(dt, period_units[i], {}))
 
     for row_num, row in enumerate(rows):
         data = row.find_all('td')

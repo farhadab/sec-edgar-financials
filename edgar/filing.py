@@ -6,6 +6,7 @@ from edgar.document import Document
 from edgar.sgml import Sgml
 from edgar.dtd import DTD
 from edgar.financials import get_financial_report
+from datetime import datetime
 
 
 FILING_SUMMARY_FILE = 'FilingSummary.xml'
@@ -70,6 +71,11 @@ class Filing:
         for document_raw in sgml.map[dtd.sec_document.tag][dtd.document.tag]:
             document = Document(document_raw)
             self.documents[document.filename] = document
+        
+        acceptance_datetime_element = sgml.map[dtd.sec_document.tag][dtd.sec_header.tag][dtd.acceptance_datetime.tag]
+        acceptance_datetime_text = acceptance_datetime_element[:8] # YYYYMMDDhhmmss, the rest is junk
+        # not concerned with time/timezones
+        self.date_filed = datetime.strptime(acceptance_datetime_text, '%Y%m%d')
 
 
 
@@ -96,7 +102,7 @@ class Filing:
                 .format(short_name, filename))
             financial_html_text = self.documents[filename].doc_text.data
 
-            financial_report = get_financial_report(self.company, financial_html_text)
+            financial_report = get_financial_report(self.company, self.date_filed, financial_html_text)
 
             if get_all:
                 financial_data.append(financial_report)
