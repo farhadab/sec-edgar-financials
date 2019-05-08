@@ -37,9 +37,10 @@ The structure of the resulting `FinancialReport`s are shown below, using the `in
 ```json
 {
 	"company": "AAPL",
+	"date_filed": "2016-01-27T00:00:00",
 	"reports": [
 		{
-			"date": "Dec. 26, 2015",
+			"date": "2015-12-26T00:00:00",
 			"months": 3,
 			"map": {
 				"us-gaap_SalesRevenueNet": {
