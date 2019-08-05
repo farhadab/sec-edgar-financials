@@ -19,8 +19,9 @@ def test_get_income_statements():
     filing = stock.get_filing(period='quarterly', year=2016, quarter=1)
     result = filing.get_income_statements()
     print(FinancialReportEncoder().encode(result)) # for easy QA using JSON
-    # mock up info
-    assert 1 == 1
+    # ensure certain data points are correct
+    revenue = result.reports[0].map['us-gaap_SalesRevenueNet'].value
+    assert revenue == 75872000000.0
 
 def test_get_statement_of_earnings():
     # synonymous with income statement
@@ -28,8 +29,9 @@ def test_get_statement_of_earnings():
     filing = stock.get_filing(period='annual', year=2018, quarter=1)
     result = filing.get_income_statements()
     print(FinancialReportEncoder().encode(result)) # for easy QA using JSON
-    # mock up info
-    assert 1 == 1
+    # ensure certain data points are correct
+    revenue = result.reports[0].map['us-gaap_Revenues'].value
+    assert revenue == 79139000000.0
 
 def test_get_balance_sheets():
 
@@ -37,8 +39,9 @@ def test_get_balance_sheets():
     filing = stock.get_filing(period='quarterly', year=2018, quarter=4)
     result = filing.get_balance_sheets()
     print(FinancialReportEncoder().encode(result)) # for easy QA using JSON
-    # mock up info
-    assert 1 == 1
+    # ensure certain data points are correct
+    assets = result.reports[0].map['us-gaap_Assets'].value
+    assert assets == 3126117000.0
 
 def test_get_statement_of_financial_position():
     # synonymous with balance sheet
@@ -46,8 +49,9 @@ def test_get_statement_of_financial_position():
     filing = stock.get_filing(period='annual', year=2018, quarter=1)
     result = filing.get_balance_sheets()
     print(FinancialReportEncoder().encode(result)) # for easy QA using JSON
-    # mock up info
-    assert 1 == 1
+    # ensure certain data points are correct
+    assets = result.reports[0].map['us-gaap_Assets'].value
+    assert assets == 125356000000.0
 
 def test_get_cash_flows():
 
@@ -55,5 +59,6 @@ def test_get_cash_flows():
     filing = stock.get_filing(period='quarterly', year=2018, quarter=4)
     result = filing.get_cash_flows()
     print(FinancialReportEncoder().encode(result)) # for easy QA using JSON
-    # mock up info
-    assert 1 == 1
+    # ensure certain data points are correct
+    profit_loss = result.reports[0].map['us-gaap_ProfitLoss'].value
+    assert profit_loss == -745351000.0

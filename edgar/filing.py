@@ -15,6 +15,9 @@ FILING_SUMMARY_FILE = 'FilingSummary.xml'
 
 class Statements:
     # used in parsing financial data; these are the statements we'll be parsing
+    # To resolve "could not find anything for ShortName..." error, likely need
+    # to add the appropriate ShortName from the FilingSummary.xml here.
+    # TODO: perhaps add guessing/best match functionality to limit this list
     income_statements = ['consolidated statements of income',
                     'consolidated statements of operations',
                     'consolidated statement of earnings',
@@ -24,6 +27,9 @@ class Statements:
                     'condensed consolidated statements of operations',
                     'condensed consolidated statement of earnings (unaudited)',
                     'condensed consolidated statement of earnings',
+                    'condensed statements of income',
+                    'condensed statements of operations',
+                    'condensed statements of operations and comprehensive loss'
                     ]
     balance_sheets = ['consolidated balance sheets',
                     'consolidated statement of financial position',
@@ -33,10 +39,12 @@ class Statements:
                     'condensed consolidated balance sheets (current period unaudited)',
                     'condensed consolidated balance sheets (unaudited)',
                     'condensed consolidated balance sheets',
+                    'condensed balance sheets'
                     ]
     cash_flows = ['consolidated statements of cash flows',
                     'condensed consolidated statements of cash flows (unaudited)',
-                    'condensed consolidated statements of cash flows'
+                    'condensed consolidated statements of cash flows',
+                    'condensed statements of cash flows'
                     ]
 
     all_statements = income_statements + balance_sheets + cash_flows
@@ -131,7 +139,10 @@ class Filing:
         else:
             print('No financial documents in this filing')
 
-        # print(statement_names)
+        if len(statement_names) == 0:
+            print('No financial documents could be found. Likely need to \
+            update constants in edgar.filing.Statements.')
+            
         return statement_names
 
 
@@ -158,7 +169,7 @@ class Filing:
             if short_name == report_short_name.lower():
                 filename = report.find('htmlfilename').get_text()
                 return filename
-        print('could not find anything for ShortName '+report_short_name.lower())
+        print(f'could not find anything for ShortName {report_short_name.lower()}')
         return None
 
 
