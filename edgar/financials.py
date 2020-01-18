@@ -7,7 +7,7 @@ from json import JSONEncoder
 from datetime import datetime
 
 class FinancialReportEncoder(JSONEncoder):
-        
+
     def default(self, o):
         if isinstance(o, datetime):
             return o.isoformat()
@@ -95,10 +95,10 @@ For 10-K or 10-Q
 4. get the HtmlFileName of the Report
 5. find the DOCUMENT with the given FILENAME in HtmlFileName
 The next part differs based on 10-K and 10-Q
-6. in the TEXT.html.body, get the data in the first table (class="report") and 
-   parse. 
+6. in the TEXT.html.body, get the data in the first table (class="report") and
+   parse.
    a. Exclude the first row (title and 12 Months Ended text)
-   b. Should have four columns, with the last three representing the 
+   b. Should have four columns, with the last three representing the
       current year, last year, and two years ago (order may vary).
    c. Years will be in th elements (class="th"), data in the td elements with
       class="nump"
@@ -118,7 +118,7 @@ The next part differs based on 10-K and 10-Q
 def get_financial_report(company, date_filed, financial_html_text):
     '''
     Returns a FinancialReport from html-structured financial data
-    
+
     :param company: identifier of the company that the financial_html_text
         belongs to (can be the company's stock symbol, for example)
     :param date_filed: datetime representing ACCEPTANCE-DATETIME of Filing
@@ -134,7 +134,7 @@ def get_financial_report(company, date_filed, financial_html_text):
 def _process_financial_info(financial_html_text):
     '''
     Return a list of FinancialInfo objects from html-structured financial data
-    
+
     :param financial_html_text: html-structured financial data from an annual
         or quarterly Edgar filing
     '''
@@ -240,7 +240,7 @@ def _get_statement_meta_data(rows):
             info_text = info.get_text().replace('\n', '')
 
             class_list = info.attrs['class']
-            
+
             repeat = 1 if 'colspan' not in info.attrs else int(info.attrs['colspan'])
 
             if row_num == 0:
@@ -251,13 +251,18 @@ def _get_statement_meta_data(rows):
                     title_repeat = 0 if 'colspan' not in info.attrs or int(info.attrs['colspan']) == 1 else int(info.attrs['colspan']) - 1
                     # first th with tl class has title and unit specification
                     info_list = info.find('div').get_text('|', strip=True).split('|')
+
                     # e.g. shares in Thousands, $ in Millions
-                    unit_text = info_list[1]
+                    unit_text = ''
+
+                    if len(info_list) == 2:
+                        unit_text = info_list[1]
+
                     # e.g. CONSOLIDATED STATEMENTS OF INCOME - USD ($)
                     title = info_text.replace(unit_text, '').strip()
 
                     # Not yet using Statements.balance_sheets from filing.py because not sure
-                    # if we can assume that the FilingSummary names will be consistent with the 
+                    # if we can assume that the FilingSummary names will be consistent with the
                     # title
                     if 'balance' in title.lower() or 'statement of financial position' in title.lower():
                         is_snapshot = True
@@ -298,7 +303,7 @@ def _get_statement_meta_data(rows):
 def _process_period(info_text):
     '''
     Returns the number of months given a financial reporting period
-    
+
     :param info_text: a reporting period, e.g. "12 Months Ended"
     '''
     return int(re.sub('[^0-9]', '', info_text))
@@ -312,7 +317,7 @@ def _process_xbrl_element(info):
     and elementName of the XBRL (in case it's not always us-gaap)
 
     :param info: must be an html element with an anchor child that has an
-        onclick attribute of the form: 
+        onclick attribute of the form:
         onclick="top.Show.showAR( this, 'defref_<xbrl_name>', window );"
     :return: <xbrl_name>
     '''

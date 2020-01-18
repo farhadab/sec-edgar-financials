@@ -64,11 +64,11 @@ class Filing:
 
         response = GetRequest(url).response
         text = response.text
-        
+
         self.text = text
 
         print('Processing SGML at '+url)
-        
+
         dtd = DTD()
         sgml = Sgml(text, dtd)
 
@@ -79,7 +79,7 @@ class Filing:
         for document_raw in sgml.map[dtd.sec_document.tag][dtd.document.tag]:
             document = Document(document_raw)
             self.documents[document.filename] = document
-        
+
         acceptance_datetime_element = sgml.map[dtd.sec_document.tag][dtd.sec_header.tag][dtd.acceptance_datetime.tag]
         acceptance_datetime_text = acceptance_datetime_element[:8] # YYYYMMDDhhmmss, the rest is junk
         # not concerned with time/timezones
@@ -142,7 +142,7 @@ class Filing:
         if len(statement_names) == 0:
             print('No financial documents could be found. Likely need to \
             update constants in edgar.filing.Statements.')
-            
+
         return statement_names
 
 
