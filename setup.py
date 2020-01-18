@@ -5,7 +5,7 @@ from setuptools import setup
 here = os.path.abspath(os.path.dirname(__file__))
 
 requires = [
-    'pandas==0.23.4',
+    'pandas==0.25.3',
     'requests==2.20.0',
     'bs4==0.0.1',
 ]
@@ -34,7 +34,7 @@ setup(
     license=about['__license__'],
     packages=['edgar'],
     keywords=['sec', 'edgar', 'financials', 'stock', 'fundamental', 'analysis'],
-    python_requires="==3.7",
+    python_requires=">=3.7",
     install_requires=requires,
     tests_require=test_requirements,
     classifiers=[
@@ -44,4 +44,5 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    include_package_data=True,
 )
