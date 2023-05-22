@@ -6,7 +6,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 requires = [
     'pandas==0.23.4',
-    'requests==2.20.0',
+    'requests==2.31.0',
     'bs4==0.0.1',
 ]
 
